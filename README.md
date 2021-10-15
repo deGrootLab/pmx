@@ -13,7 +13,7 @@ V. Gapsys, S. Michielssens, D. Seeliger, B. L. de Groot. J. Comput. Chem. 2014, 
 
 ## Purpose ##
 
-I mostly use pmx to write short scripts which perform some changes in pdb files, e.g. changing atom or residue names, applying some geometric transformations or doing some kind of analysis. The critical issue for these things is usually not calculation time but straightforward selection of some atoms/residues of interest, quick file parsing and data visualization, which renders a well-organized data structure and easy programming style more important than computation performance. Hence, and ideal task for Python.
+I mostly use pmx to write short scripts which perform some changes in pdb files, e.g. changing atom or residue names, applying some geometric transformations or doing some kind of analysis. The critical issue for these things is usually not calculation time but straightforward selection of some atoms/residues of interest, quick file parsing and data visualization, which renders a well-organized data structure and easy programming style more important than computation performance. Hence, an ideal task for Python.
 
 ## Installation ##
 
