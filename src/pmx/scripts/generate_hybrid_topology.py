@@ -143,14 +143,17 @@ def main(args):
     pmxtop, pmxitps = gen_hybrid_top(topol=topol, recursive=recursive,
                                      verbose=True, scaleDih=scaleDih)
 
+    # get the base path for the .itp file output
+    basepath = os.path.abspath(outfile).rsplit('/',1)[0]
+
     # write hybrid itps if present
     replace = {}
     if len(pmxitps) > 0:
         for pmxitp in pmxitps:
             itp_fn = os.path.basename(pmxitp.filename)
-            out_fn = 'pmx_%s' % itp_fn
+            out_fn = '{0}/pmx_{1}'.format(basepath,itp_fn)
             # store old/new itp names for replacement in top file
-            replace[itp_fn] = out_fn
+            replace[itp_fn] = 'pmx_{0}'.format(itp_fn) #out_fn
             print('\nlog_> Writing itp file "%s""' % out_fn)
             pmxitp.write(out_fn, scale_mass=scale_mass)
 

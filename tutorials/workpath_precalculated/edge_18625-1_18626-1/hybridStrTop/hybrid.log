@@ -1,0 +1,70 @@
+ligandHybridTop__log_> Reading ligand 1 from: "/home/vgapsys/project/make_hybrid/AZtutorial/input/ligands/lig_18625-1/mol_gmx.pdb"
+ligandHybridTop__log_> Reading ligand 2 from: "/home/vgapsys/project/make_hybrid/AZtutorial/input/ligands/lig_18626-1/mol_gmx.pdb"
+ligandHybridTop__log_> Reading topology 1 from: "/home/vgapsys/project/make_hybrid/AZtutorial/input/ligands/lig_18625-1/MOL.itp"
+ligandHybridTop__log_> Reading topology 2 from: "/home/vgapsys/project/make_hybrid/AZtutorial/input/ligands/lig_18626-1/MOL.itp"
+ligandHybridTop__log_> Reading file with atom pairs: "/home/vgapsys/project/make_hybrid/AZtutorial/workpath/edge_18625-1_18626-1/hybridStrTop/pairs1.dat"
+ligandHybridTop__log_> Assigning forcefield parameters....
+ligandHybridTop__log_> Initializing the main object for LigandHybridTopology
+ligandHybridTop__log_> Starting hybrid topology generation
+ligandHybridTop__log_> Making atom pairs.....
+ligandHybridTop__log_> Identifying dummies.....
+ligandHybridTop__log_> Generated 33 atom-atom pairs
+ligandHybridTop__log_> Dummies in state A: 6
+ligandHybridTop__log_> Dummies in state B: 6
+ligandHybridTop__log_> Making B-states....
+ligandHybridTop__log_> Atom....:    2            c3 |   0.14 |  12.01 ->           c3 |   0.14 |  12.01
+ligandHybridTop__log_> Atom....:   27            h1 |   0.05 |   1.01 ->           h1 |   0.05 |   1.01
+ligandHybridTop__log_> Atom....:   28            h1 |   0.05 |   1.01 ->           h1 |   0.05 |   1.01
+ligandHybridTop__log_> Atom....:    1            c3 |  -0.11 |  12.01 ->           c3 |  -0.11 |  12.01
+ligandHybridTop__log_> Atom....:   24            hc |   0.05 |   1.01 ->           hc |   0.05 |   1.01
+ligandHybridTop__log_> Atom....:   25            hc |   0.05 |   1.01 ->           hc |   0.05 |   1.01
+ligandHybridTop__log_> Atom....:   26            hc |   0.05 |   1.01 ->           hc |   0.05 |   1.01
+ligandHybridTop__log_> Atom....:    3            os |  -0.44 |  16.00 ->           os |  -0.44 |  16.00
+ligandHybridTop__log_> Atom....:    4            ca |   0.74 |  12.01 ->           ca |   0.74 |  12.01
+ligandHybridTop__log_> Atom....:    5            nb |  -0.83 |  14.01 ->           nb |  -0.83 |  14.01
+ligandHybridTop__log_> Atom....:    6            ca |   0.63 |  12.01 ->           ca |   0.62 |  12.01
+ligandHybridTop__log_> Atom....:    7            ca |  -0.39 |  12.01 ->           ca |  -0.39 |  12.01
+ligandHybridTop__log_> Atom....:   29            ha |   0.18 |   1.01 ->           ha |   0.18 |   1.01
+ligandHybridTop__log_> Atom....:    8            ca |   0.31 |  12.01 ->           ca |   0.31 |  12.01
+ligandHybridTop__log_> Atom....:   10            ca |  -0.28 |  12.01 ->           ca |  -0.28 |  12.01
+ligandHybridTop__log_> Atom....:   11            cg |   0.27 |  12.01 ->           cg |   0.27 |  12.01
+ligandHybridTop__log_> Atom....:   12            n1 |  -0.39 |  14.01 ->           n1 |  -0.39 |  14.01
+ligandHybridTop__log_> Atom....:    9            nv |  -0.86 |  14.01 ->           nv |  -0.86 |  14.01
+ligandHybridTop__log_> Atom....:   13            ns |  -0.55 |  14.01 ->           ns |  -0.55 |  14.01
+ligandHybridTop__log_> Atom....:   14             c |   0.68 |  12.01 ->            c |   0.67 |  12.01
+ligandHybridTop__log_> Atom....:   15             o |  -0.58 |  16.00 ->            o |  -0.58 |  16.00
+ligandHybridTop__log_> Atom....:   16            c3 |  -0.11 |  12.01 ->           c3 |  -0.11 |  12.01
+ligandHybridTop__log_> Atom....:   33            hc |   0.09 |   1.01 ->           hc |   0.09 |   1.01
+ligandHybridTop__log_> Atom....:   34            hc |   0.09 |   1.01 ->           hc |   0.09 |   1.01
+ligandHybridTop__log_> Atom....:   17            ca |  -0.10 |  12.01 ->           ca |  -0.09 |  12.01
+ligandHybridTop__log_> Atom....:   18            ca |   0.03 |  12.01 ->           ca |  -0.11 |  12.01
+ligandHybridTop__log_> Atom....:   20            ca |  -0.12 |  12.01 ->           ca |   0.02 |  12.01
+ligandHybridTop__log_> Atom....:   21            ca |  -0.11 |  12.01 ->           ca |  -0.12 |  12.01
+ligandHybridTop__log_> Atom....:   36            ha |   0.14 |   1.01 ->           ha |   0.15 |   1.01
+ligandHybridTop__log_> Atom....:   22            ca |  -0.12 |  12.01 ->           ca |  -0.12 |  12.01
+ligandHybridTop__log_> Atom....:   37            ha |   0.14 |   1.01 ->           ha |   0.14 |   1.01
+ligandHybridTop__log_> Atom....:   23            ca |  -0.12 |  12.01 ->           ca |  -0.13 |  12.01
+ligandHybridTop__log_> Atom....:   38            ha |   0.14 |   1.01 ->           ha |   0.14 |   1.01
+ligandHybridTop__log_> Constructing dummies....
+ligandHybridTop__log_> Dummies in stateA: 
+ligandHybridTop__log_> Dummy...:   40        DUM_cl |   0.00 |  35.45 ->           cl |  -0.12 |  35.45
+ligandHybridTop__log_> Dummy...:   41        DUM_hn |   0.00 |   1.01 ->           hn |   0.44 |   1.01
+ligandHybridTop__log_> Dummy...:   42        DUM_hn |   0.00 |   1.01 ->           hn |   0.44 |   1.01
+ligandHybridTop__log_> Dummy...:   43        DUM_hn |   0.00 |   1.01 ->           hn |   0.34 |   1.01
+ligandHybridTop__log_> Dummy...:   44        DUM_ha |   0.00 |   1.01 ->           ha |   0.16 |   1.01
+ligandHybridTop__log_> Dummy...:   45        DUM_DU |   0.00 |   0.00 ->           DU |   0.04 |   0.00
+ligandHybridTop__log_> Dummies in stateB: 
+ligandHybridTop__log_> Dummy...:   19            cl |  -0.11 |  35.45 ->       DUM_cl |   0.00 |  35.45
+ligandHybridTop__log_> Dummy...:   30            hn |   0.44 |   1.01 ->       DUM_hn |   0.00 |   1.01
+ligandHybridTop__log_> Dummy...:   31            hn |   0.44 |   1.01 ->       DUM_hn |   0.00 |   1.01
+ligandHybridTop__log_> Dummy...:   32            hn |   0.34 |   1.01 ->       DUM_hn |   0.00 |   1.01
+ligandHybridTop__log_> Dummy...:   35            ha |   0.15 |   1.01 ->       DUM_ha |   0.00 |   1.01
+ligandHybridTop__log_> Dummy...:   39            DU |   0.04 |   0.00 ->       DUM_DU |   0.00 |   0.00
+ligandHybridTop__log_> Construct bonds....
+ligandHybridTop__log_> Construct angles....
+ligandHybridTop__log_> Construct dihedrals....
+ligandHybridTop__log_> Construct vsites....
+ligandHybridTop__log_> Construct pairs (1-4 interactions)....
+ligandHybridTop__log_> Assembling new itp....
+ligandHybridTop__log_> Writing new itp file: "/home/vgapsys/project/make_hybrid/AZtutorial/workpath/edge_18625-1_18626-1/hybridStrTop/merged.itp"
+ligandHybridTop__log_> Writing dummy forcefield file: "/home/vgapsys/project/make_hybrid/AZtutorial/workpath/edge_18625-1_18626-1/hybridStrTop/ffmerged.itp"

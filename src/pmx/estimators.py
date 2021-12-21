@@ -794,17 +794,19 @@ class BAR:
         # Calculate all BAR properties available
         self.dg = self.calc_dg(self.wf, self.wr, self.T)
         self.err = self.calc_err(self.dg, self.wf, self.wr, self.T)
+        self.conv = self.calc_conv(self.dg, self.wf, self.wr, self.T)
         if nboots > 0:
             self.err_boot = self.calc_err_boot(self.wf, self.wr, nboots,
                                                self.T)
-        self.conv = self.calc_conv(self.dg, self.wf, self.wr, self.T)
-        if nboots > 0:
             self.conv_err_boot = self.calc_conv_err_boot(self.dg, self.wf,
                                                          self.wr, nboots,
                                                          self.T)
         if nblocks > 1:
             self.err_blocks = self.calc_err_blocks(self.wf, self.wr, nblocks,
                                                    self.T)
+            self.conv_err_blocks = self.calc_conv_err_blocks(self.dg, self.wf,
+                                                         self.wr, nblocks,
+                                                         self.T)
 
     @staticmethod
     def calc_dg(wf, wr, T):
@@ -1048,3 +1050,48 @@ class BAR:
         sys.stdout.write('\n')
         err = np.std(conv_boots)
         return err
+
+    @staticmethod
+    def calc_conv_err_blocks(dg, wf, wr, nblocks, T):
+        '''Calculates the standard error of the convergence measure
+        based on a number of blocks the work values are divided into. 
+        It is useful when you run independent
+        equilibrium simulations, so that you can then use their respective
+        work values to compute the standard error based on the repeats.
+
+        Parameters
+        ----------
+        dg : float
+            the BAR free energy estimate
+        wf : array_like
+            array of forward work values.
+        wr : array_like
+            array of reverse work values.
+        T : float
+            temperature
+        nblocks: int
+            number of blocks to divide the data into. This can be for
+            instance the number of independent equilibrium simulations
+            you ran.
+
+        Returns
+        ----------
+        sderr : float
+            the standard error of the convergence measure.
+        '''
+
+        conv_blocks = []
+        # loosely split the arrays
+        wf_split = np.array_split(wf, nblocks)
+        wr_split = np.array_split(wr, nblocks)
+
+        # calculate all dg
+        for wf_block, wr_block in zip(wf_split, wr_split):
+            conv_block = BAR.calc_conv(dg, wf_block, wr_block, T)
+            conv_blocks.append(conv_block)
+
+        # get std err
+        err_blocks = scipy.stats.sem(conv_blocks, ddof=1)
+
+        return err_blocks
+

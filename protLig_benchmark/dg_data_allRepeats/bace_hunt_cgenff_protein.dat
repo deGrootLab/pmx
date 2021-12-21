@@ -1,4 +1,4 @@
-#1_edge  2_prot1_ddg  3_prot1_err  4_prot2_ddg  5_prot2_err  6_prot3_ddg  7_prot3_err
+#1_edge  2_prot1_dg  3_prot1_err  4_prot2_dg  5_prot2_err  6_prot3_dg  7_prot3_err
 #all values in kJ/mol
      11_19  18.58  0.56  23.46  0.57  19.15  0.74
      11_21  3.10  0.36  2.41  0.41  4.39  0.52

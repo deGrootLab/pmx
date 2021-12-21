@@ -281,11 +281,16 @@ class Chain(Atomselection):
         for r in self.residues:
             for atom in r.atoms:
                 self.atoms.append(atom)
-        if midx != -1:
+        if midx != -1: # renumber in the model
             if renumber_atoms is True:
                 self.model.renumber_atoms()
             if renumber_residues is True:
                 self.model.renumber_residues()
+        else: # renumber in the chain
+            if renumber_atoms is True:
+                self.renumber_atoms()
+            if renumber_residues is True:
+                self.renumber_residues()
         self.make_residue_tree()
 
     def replace_residue(self, residue, new, bKeepResNum=False):

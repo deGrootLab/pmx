@@ -1,4 +1,4 @@
-#1_edge  2_water1_ddg  3_water1_err  4_water2_ddg  5_water2_err  6_water3_ddg  7_water3_err
+#1_edge  2_water1_dg  3_water1_err  4_water2_dg  5_water2_err  6_water3_dg  7_water3_err
 #all values in kJ/mol
 02_ligOMe_05_ligOEt  -35.14  0.11  -35.31  0.12  -35.11  0.11
 03_ligNHMe_02_ligOMe  -86.47  0.18  -86.36  0.20  -86.42  0.17

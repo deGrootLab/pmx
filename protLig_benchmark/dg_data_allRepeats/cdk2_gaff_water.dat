@@ -1,4 +1,4 @@
-#1_edge  2_water1_ddg  3_water1_err  4_water2_ddg  5_water2_err  6_water3_ddg  7_water3_err
+#1_edge  2_water1_dg  3_water1_err  4_water2_dg  5_water2_err  6_water3_dg  7_water3_err
 #all values in kJ/mol
    17_1h1q  8.40  0.28  8.04  0.25  8.71  0.31
      17_21  -77.36  0.35  -77.07  0.33  -77.00  0.37

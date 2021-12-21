@@ -21044,3 +21044,9 @@ Protein_chain_A     3
  2143  2145  2147  2164  2166     1 
  2164  2166  2168  2178  2180     1 
  2178  2180  2182  2195  2197     1 
+
+; Include Position restraint file
+#ifdef POSRES
+#include "posre.itp"
+#endif
+

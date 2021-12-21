@@ -1,4 +1,4 @@
-#1_edge  2_water1_ddg  3_water1_err  4_water2_ddg  5_water2_err  6_water3_ddg  7_water3_err
+#1_edge  2_water1_dg  3_water1_err  4_water2_dg  5_water2_err  6_water3_dg  7_water3_err
 #all values in kJ/mol
  28_L_29_L  45.48  0.28  43.97  0.34  45.62  0.22
  28_L_35_L  30.54  0.36  31.22  0.32  31.07  0.33

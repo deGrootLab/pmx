@@ -1,4 +1,4 @@
-#1_edge  2_prot1_ddg  3_prot1_err  4_prot2_ddg  5_prot2_err  6_prot3_ddg  7_prot3_err
+#1_edge  2_prot1_dg  3_prot1_err  4_prot2_dg  5_prot2_err  6_prot3_dg  7_prot3_err
 #all values in kJ/mol
 CAT-13a_CAT-13m  -322.06  0.72  -322.52  0.76  -323.10  0.68
 CAT-13a_CAT-17g  102.70  0.67  101.56  0.54  98.55  0.56

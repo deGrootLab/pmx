@@ -1,4 +1,4 @@
-#1_edge  2_water1_ddg  3_water1_err  4_water2_ddg  5_water2_err  6_water3_ddg  7_water3_err
+#1_edge  2_water1_dg  3_water1_err  4_water2_dg  5_water2_err  6_water3_dg  7_water3_err
 #all values in kJ/mol
 ejm_31_ejm_43  284.58  0.22  284.07  0.20  284.27  0.22
 ejm_31_ejm_45  145.19  0.32  145.21  0.30  145.86  0.29

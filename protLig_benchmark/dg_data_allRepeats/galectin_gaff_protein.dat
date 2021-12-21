@@ -1,4 +1,4 @@
-#1_edge  2_prot1_ddg  3_prot1_err  4_prot2_ddg  5_prot2_err  6_prot3_ddg  7_prot3_err
+#1_edge  2_prot1_dg  3_prot1_err  4_prot2_dg  5_prot2_err  6_prot3_dg  7_prot3_err
 #all values in kJ/mol
 02_ligOMe_05_ligOEt  -14.98  0.34  -18.11  0.33  -16.08  0.31
 03_ligNHMe_02_ligOMe  9.56  0.42  10.86  0.39  11.99  0.47

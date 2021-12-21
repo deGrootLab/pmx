@@ -1,4 +1,4 @@
-#1_edge  2_water1_ddg  3_water1_err  4_water2_ddg  5_water2_err  6_water3_ddg  7_water3_err
+#1_edge  2_water1_dg  3_water1_err  4_water2_dg  5_water2_err  6_water3_dg  7_water3_err
 #all values in kJ/mol
      1a_3b  0.08  0.62  1.68  0.49  0.74  0.51
       1a_5  0.44  0.40  0.49  0.51  0.87  0.41

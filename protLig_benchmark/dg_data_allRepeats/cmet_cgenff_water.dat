@@ -1,4 +1,4 @@
-#1_edge  2_water1_ddg  3_water1_err  4_water2_ddg  5_water2_err  6_water3_ddg  7_water3_err
+#1_edge  2_water1_dg  3_water1_err  4_water2_dg  5_water2_err  6_water3_dg  7_water3_err
 #all values in kJ/mol
 CHEMBL3402744_300_4_CHEMBL3402745_200_5  -10.86  0.21  -10.80  0.22  -11.06  0.27
 CHEMBL3402747_3400_7_CHEMBL3402745_200_5  -119.08  0.57  -118.92  0.35  -118.56  0.34

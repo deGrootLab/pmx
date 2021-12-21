@@ -52302,3 +52302,9 @@ protein     3
  5479  5481  5483  5494  5496     1 
  5494  5496  5498  5509  5511     1 
  5509  5511  5513  5528  5530     1 
+
+; Include Position restraint file
+#ifdef POSRES
+#include "posre.itp"
+#endif
+

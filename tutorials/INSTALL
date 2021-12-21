@@ -1,0 +1,28 @@
+
+# Let's create a separate conda environment and call it AZtutorial
+# this environment will contain only the packages necessary to run the tutorial
+conda create -n AZtutorial python=3.7
+
+# activate the environment
+conda activate AZtutorial
+
+# install several required packages
+conda install numpy matplotlib scipy pip jupyter pandas
+conda install -c rdkit rdkit 
+
+# Now let's download pmx
+git clone https://github.com/deGrootLab/pmx
+cd pmx
+
+# we will use "develop" branch of the pmx
+git checkout develop
+
+# finally, install pmx
+pip install .
+
+# the tutorial is in the pmx folder "tutorial"
+cd tutorials
+
+# launch jupyter notebook and start the tutorial
+jupyter notebook 
+

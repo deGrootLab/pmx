@@ -47,6 +47,7 @@ Usage:
 """
 
 import sys
+import copy as cp
 from numpy import array, pi, linalg, cross
 from . import library
 from .geometry import Rotation
@@ -54,6 +55,7 @@ from .chain import Chain
 from .atom import Atom
 from .model import Model
 from .molecule import Molecule
+from . import geometry
 
 
 def add_bp(m, strand=None, bRNA=False):
@@ -258,7 +260,31 @@ def attach_group(atom, mol):
         master.append(a)
 
 
-def make_residue(key, hydrogens=True):
+def _is_mainchain( a ):
+    if a.name=='N':
+        return(True)
+    if a.name=='H' or a.name=='HN' or a.name=='H1' or a.name=='H2' or a.name=='H3':
+        return(True)
+    if a.name=='CA':
+        return(True)
+    if a.name=='C':
+        return(True)
+    if a.name=='O' or a.name=='OXT' or a.name=='OX' or a.name=='OT':
+        return(True)
+    return(False)
+
+def make_stereoisomer_residue( m ):
+    mtmp = cp.deepcopy( m )
+    # fit
+    N1, CA1, C1 = m.fetchm(['N', 'CA', 'C'])
+    N2, CA2, C2 = mtmp.fetchm(['N', 'CA', 'C'])
+    geometry.fit_atoms( [N1,CA1,C1], [C2,CA2,N2], mtmp.atoms )
+    for atmp,a in zip(mtmp.atoms,m.atoms):
+        if _is_mainchain( a )==False:
+            a.x = atmp.x
+    return(m)
+
+def make_residue(key, hydrogens=True, chirality='L'):
     """ returns a molecule object with
     default geometry"""
 
@@ -281,11 +307,36 @@ def make_residue(key, hydrogens=True):
             a.m = library._atommass[a.symbol]
             a.unity = 'A'
             m.atoms.append(a)
+
+    if chirality=='D':
+        m = make_stereoisomer_residue( m )
     return m
 
 
 def build_chain(sequence, dihedrals=None,
-                hydrogens=True, ss=None, chain_id='X'):
+                hydrogens=True, ss=None, chain_id='X', bCyclic=False, bCap=False,
+                chirality=None):
+
+    # chirality 
+    if chirality==None:
+        chirality = ''
+        for s in sequence:
+            chirality = chirality+'L'
+
+    # if cyclic, form dihedrals
+    n = len(sequence)
+    if bCyclic==True:
+        dihedrals = []
+        fudge = float(n)/5.0 # empirical fudge to have some space between the termini
+        dphi = 2.0*360.0/float(n+fudge)
+        if bCap==True: # leave space for caps
+            dphi = 2.0*360.0/float(n+fudge+1)
+        dpsi = 0.0
+        dom = 180.0
+        sign = -1.0
+        for i in range(0,n):
+            dihedrals.append( (sign*dphi,-1.0*sign*dpsi,dom) )
+            sign = -1.0*sign
 
     ch = Chain()
     if dihedrals is None:
@@ -304,18 +355,20 @@ def build_chain(sequence, dihedrals=None,
                     dihedrals.append(library._anti_beta)
 
     rl = []
-    start = make_residue(library._aacids_dic[sequence[0]], hydrogens=hydrogens)
+    start = make_residue(library._aacids_dic[sequence[0]], hydrogens=hydrogens, chirality=chirality[0])
     start.set_resid(1)
     set_psi(start, dihedrals[0][1])
     rl.append(start)
-    for i, aa in enumerate(sequence[1:]):
-        phi, psi, om = dihedrals[i+1]
-        phi2, psi2, om2 = dihedrals[i]
+    for i in range(1,n):
+        aa = sequence[i]
+        ld = chirality[i]
+        phi, psi, om = dihedrals[i]
+        phi2, psi2, om2 = dihedrals[i-1]
         mol = attach_aminoacid(start, library._aacids_ext_amber[aa],
                                hydrogens=hydrogens,
-                               phi=phi, psi=psi, omega=om2)
-        mol.set_resid(i+2)
-        set_phi(start, mol, dihedrals[i+1][0])
+                               phi=phi, psi=psi, omega=om2,chirality=ld)
+        mol.set_resid(i+1)
+        set_phi(start, mol, dihedrals[i][0])
         start = mol
         rl.append(mol)
     al = []
@@ -328,6 +381,11 @@ def build_chain(sequence, dihedrals=None,
     ch.set_chain_id(chain_id)
     for atom in ch.atoms:
         atom.unity = 'A'
+
+    if bCap==True:
+        ch.add_nterm_cap()
+        ch.add_cterm_cap()
+
     return ch
 
 
@@ -377,9 +435,9 @@ def set_omega(mol1, mol2, phi):
 
 
 def attach_aminoacid(mol, resname, hydrogens=True,
-                     omega=180., phi=-139., psi=135.):
+                     omega=180., phi=-139., psi=135., chirality='L'):
 
-    new = make_residue(resname, hydrogens=hydrogens)
+    new = make_residue(resname, hydrogens=hydrogens, chirality=chirality)
     # we need Ca, C and O from mol
     Ca, C, O = mol.fetchm(['CA', 'C', 'O'])
     # and N from new

@@ -1,4 +1,4 @@
-#1_edge  2_prot1_ddg  3_prot1_err  4_prot2_ddg  5_prot2_err  6_prot3_ddg  7_prot3_err
+#1_edge  2_prot1_dg  3_prot1_err  4_prot2_dg  5_prot2_err  6_prot3_dg  7_prot3_err
 #all values in kJ/mol
 CHEMBL3402744_300_4_CHEMBL3402745_200_5  -12.74  0.31  -13.88  0.25  -13.11  0.23
 CHEMBL3402747_3400_7_CHEMBL3402745_200_5  -134.00  0.76  -139.26  0.73  -137.64  0.70

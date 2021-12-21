@@ -34,8 +34,9 @@
 """
 
 import re
-import sys
+import sys,os,random
 from .parser import readSection
+from .model import Model
 
 
 class IndexGroup:
@@ -194,6 +195,8 @@ class IndexFile:
             fp = open(fn, 'w')
         for gr in self.groups:
             print('{0}\n'.format(str(gr)), file=fp)
+        if fn:
+            fp.close()
 
     def add_group(self, group):
         """Adds a group to the IndexFile.
@@ -253,3 +256,45 @@ def make_index_group(atomlist, name):
     lst = get_index(atomlist)
     g = IndexGroup(ids=lst, name=name)
     return g
+
+
+def create_ndx_freeze( pdbFile, ndxFile='index_FREEZE.ndx', groupname='FREEZE' ):
+    """Create a group for freezing with all atoms except dummies.
+
+    Parameters
+    ----------
+    pdbfile : str
+            filename of pdb. The group will be constructed based on the atom names.
+    ndxFile : str, optional
+            filename of ndx. An existing or not existing index file can be provided.
+    groupname : str, optional
+            name for the new group
+    """
+
+    # deal with the index file
+    if os.path.isfile(ndxFile): # file exists
+        indFile = IndexFile(ndxFile)
+        randnum = random.randint(1000,9999)
+        if groupname in indFile.names:
+            groupname = '{0}{1}'.format(groupname,randnum)
+    else: # new file
+        indFile = IndexFile()
+    
+    # create index group
+    m = Model(pdbFile)
+    i = 0
+    ind = []
+    for a in m.atoms:
+        i+=1
+        if a.name.startswith('D') or a.name.startswith('HV'):
+            continue
+        ind.append(i)
+    indGroup = IndexGroup(name=groupname,ids=ind)
+    
+    # add index group to the file
+    indFile.add_group(indGroup)
+    
+    # write
+    indFile.write(fn=ndxFile)
+    
+

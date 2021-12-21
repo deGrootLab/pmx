@@ -1,4 +1,4 @@
-#1_edge  2_water1_ddg  3_water1_err  4_water2_ddg  5_water2_err  6_water3_ddg  7_water3_err
+#1_edge  2_water1_dg  3_water1_err  4_water2_dg  5_water2_err  6_water3_dg  7_water3_err
 #all values in kJ/mol
 p38a_2aa_p38a_2bb  -196.97  0.53  -197.45  0.47  -197.88  0.56
 p38a_2aa_p38a_3flw  -387.70  0.61  -387.03  0.57  -387.57  0.66

@@ -1,0 +1,18 @@
+#include "amber99sb-star-ildn-mut.ff/forcefield.itp"
+#include "../hybridStrTop/ffmerged.itp"
+#include "../hybridStrTop/merged.itp"
+#include "../../../input/protein_amber/topol_Protein_chain_A.itp"
+#include "../../../input/protein_amber/topol_Protein_chain_F.itp"
+#include "amber99sb-star-ildn-mut.ff/tip3p.itp"
+#include "amber99sb-star-ildn-mut.ff/ions.itp"
+
+[ system ]
+protein and ligand in water
+
+[ molecules ]
+Protein_chain_A 1
+Protein_chain_F 1
+MOL 1
+SOL         24536
+NaJ              66
+ClJ              71

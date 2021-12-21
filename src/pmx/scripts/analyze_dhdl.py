@@ -107,7 +107,7 @@ def parse_options():
                         help='Number of bootstrap samples to use for the '
                         'bootstrap estimate of the standard errors. Default '
                         'is 0 (no bootstrap).',
-                        default=0)
+                        default=100)
     parser.add_argument('-n',
                         metavar='nblocks',
                         dest='nblocks',
@@ -543,6 +543,8 @@ def main(args):
 
         if nboots > 0:
             _tee(out, '  BAR: Conv Std Err (bootstrap) = %8.2f' % bar.conv_err_boot, quiet=quiet)
+        if nblocks > 1:
+            _tee(out, '  BAR: Conv Std Err (blocks) = %8.2f' % bar.conv_err_blocks, quiet=quiet)
 
     # =========
     # Jarzynski

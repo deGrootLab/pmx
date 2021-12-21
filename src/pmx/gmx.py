@@ -190,7 +190,7 @@ def genion(s, p, o='genion.gro', np=0, nn=0, conc=0.15, neutral=True,
          shell=True)
 
 
-def trjconv(f, s, o='trjconv.xtc', ur='rect', pbc='none', fit='none',
+def trjconv(f, s, o='trjconv.xtc', ur='compact', pbc='none', fit='none',
             out_grp='System', fit_grp='C-alpha', sep=False, other_flags=''):
     """Simple ``gmx trjconv`` wrapper.
 
@@ -203,7 +203,7 @@ def trjconv(f, s, o='trjconv.xtc', ur='rect', pbc='none', fit='none',
     o : str, optional
         output trajectory/structure file. Default is "trjconv.xtc"
     ur : str, optional
-        unit-cell representation: rect, tric, compact. Default is 'rect'.
+        unit-cell representation: rect, tric, compact. Default is 'compact'.
     pbc : str, optional
         PBC treatment: none, mol, res, atom, nojump, cluster, whole.
         Default is 'none'.
@@ -234,11 +234,11 @@ def trjconv(f, s, o='trjconv.xtc', ur='rect', pbc='none', fit='none',
         other_flags += ' -sep'
 
     if fit == 'none':
-        call('echo "{out_grp}" | {gmx} trjconv -f {f} -s {s} -o {o} -ur {ur} -pdb {pbc}'
+        call('echo "{out_grp}" | {gmx} trjconv -f {f} -s {s} -o {o} -ur {ur} -pbc {pbc}'
              '{other_flags}'.format(gmx=gmx, f=f, s=s, o=o, ur=ur, pbc=pbc, out_grp=out_grp, other_flags=other_flags),
              shell=True)
     else:
-        call('echo "{fit_grp}" "{out_grp}" | {gmx} trjconv -f {f} -s {s} -o {o} -ur {ur} -pdb {pbc} -fit {fit}'
+        call('echo "{fit_grp}" "{out_grp}" | {gmx} trjconv -f {f} -s {s} -o {o} -ur {ur} -pbc {pbc} -fit {fit}'
              '{other_flags}'.format(gmx=gmx, f=f, s=s, o=o, ur=ur, pbc=pbc, fit=fit,
                                     out_grp=out_grp, fit_grp=fit_grp, other_flags=other_flags),
              shell=True)

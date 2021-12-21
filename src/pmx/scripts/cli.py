@@ -16,15 +16,18 @@ class PmxCli:
     ------------------------
 
     Available commands are:
-        mutate       Mutate protein or DNA/RNA
-        gentop       Fill hybrid topology with B states
-        analyse      Estimate free energy from Gromacs xvg files
+        mutate        Mutate protein or DNA/RNA
+        gentop        Fill hybrid topology with B states
+        analyse       Estimate free energy from Gromacs xvg files
 
-        doublebox    Place two input structures into a single box
-        abfe         Setup files for an ABFE calculation
+        atomMapping   Ligand alchemy: map atoms for morphing
+        ligandHybrid  Ligand alchemy: hybrid structure/topology
 
-        genlib       Generate pmx ff library
-        gmxlib       Show/set GMXLIB path''',
+        doublebox     Place two input structures into a single box
+        abfe          Setup files for an ABFE calculation
+
+        genlib        Generate pmx ff library
+        gmxlib        Show/set GMXLIB path''',
             formatter_class=RawTextHelpFormatter)
 
         parser.add_argument('-v', '--version', action='version',
@@ -52,6 +55,14 @@ class PmxCli:
         from . import analyze_dhdl
         analyze_dhdl.entry_point()
 
+    def atomMapping(self):
+        from . import atomMapping
+        atomMapping.entry_point()
+
+    def ligandHybrid(self):
+        from . import ligandHybrid
+        ligandHybrid.entry_point()
+
     def doublebox(self):
         from . import make_double_box
         make_double_box.entry_point()
@@ -74,7 +85,7 @@ def check_unknown_cmd(unknowns):
     commands are found.
     '''
     expected = ['pmx', 'analyse', 'mutate', 'doublebox', 'gentop', 'gmxlib',
-                'genlib', 'abfe']
+                'genlib', 'abfe', 'atomMapping', 'ligandHybrid']
 
     for cmd in unknowns:
         if cmd not in expected:

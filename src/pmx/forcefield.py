@@ -95,13 +95,9 @@ class TopolBase:
     """Base class for topology objects. It reads/writes topology files.
     """
 
-    def __init__(self, filename, version='old'):
+    def __init__(self, filename=None, version='old'):
         self.filename = filename
         self.version = version
-        if os.path.splitext(filename)[1] == '.itp':
-            self.is_itp = True
-        else:
-            self.is_itp = False
         self.defaults = ''
         self.header = []
         self.atomtypes = []
@@ -133,7 +129,13 @@ class TopolBase:
         self.qB = 0.
         self.include_itps = []
         self.forcefield = ''
-        self.read()
+        self.is_itp = True
+        if filename!=None:
+            if os.path.splitext(filename)[1] == '.itp':
+                self.is_itp = True
+            else:
+                self.is_itp = False
+            self.read()
 
     # ==============
     # read functions
@@ -165,6 +167,8 @@ class TopolBase:
             if self.has_posre:
                 self.read_posre(posre_sections)
             self.__make_residues()
+        else: # maybe only atomtypes are available
+            self.read_atomtypes(lines)
         if not self.is_itp:
             self.read_system(lines)
             self.read_molecules(lines)
@@ -278,8 +282,17 @@ class TopolBase:
         for line in lst:
             atomtype = dict()
             elements = line.split()
-            # take into account there can be 2 formats for atomtypes
-            if len(elements) == 7:
+            # take into account there can be 3 formats for atomtypes
+            if len(elements) == 6:
+                atomtype['name'] = str(elements[0])
+                atomtype['bond_type'] = str(elements[0])
+                atomtype['mass'] = float(elements[1])
+                atomtype['charge'] = float(elements[2])
+                atomtype['ptype'] = str(elements[3])
+                atomtype['sigma'] = float(elements[4])
+                atomtype['epsilon'] = float(elements[5])
+                self.atomtypes.append(atomtype)
+            elif len(elements) == 7:
                 atomtype['name'] = str(elements[0])
                 atomtype['bond_type'] = str(elements[1])
                 atomtype['mass'] = float(elements[2])
@@ -729,7 +742,7 @@ class TopolBase:
     def write(self, outfile, stateBonded='AB', stateTypes='AB', stateQ='AB',
               scale_mass=False, dummy_qA='on', dummy_qB='on', target_qB=None,
               full_morphe=True, write_atypes=True, posre_ifdef=True, posre_include=False,
-              verbose=False):
+              verbose=False, qPrec=6):
         """Writes the Topology to file.
 
         The parameters ``stateBonded``, ``stateTypes``, and ``stateQ`` control
@@ -780,6 +793,8 @@ class TopolBase:
         verbose : bool, optional
             whether to print out information about each atom written. Default
             is False.
+        qPrec : int, optional
+            number of significant digits for charges in topology. Default is 6.
         """
         # open file for writing
         fp = open(outfile, 'w')
@@ -808,6 +823,7 @@ class TopolBase:
 
         # write the rest of the header without the
         # line that imports the forcefield
+        self.includes = [] # here collect the included itp's to avoid doubly including them
         self.write_header(fp, write_ff=False)
 
         # write itps included at top of the file
@@ -819,7 +835,7 @@ class TopolBase:
             self.write_atoms(fp, charges=stateQ, atomtypes=stateTypes,
                              dummy_qA=dummy_qA, dummy_qB=dummy_qB,
                              scale_mass=scale_mass, target_qB=target_qB,
-                             full_morphe=full_morphe, verbose=verbose)
+                             full_morphe=full_morphe, verbose=verbose, qPrec=qPrec)
             self.write_bonds(fp, state=stateBonded)
             if self.have_constraints:
                 self.write_constraints(fp)
@@ -883,6 +899,9 @@ class TopolBase:
 
         print('', file=fp)
         for line in self.header:
+            if 'include' in line:
+                foo = line.rstrip()
+                self.includes.append(foo.split()[-1])
             if 'forcefield' in line and write_ff is False:
                 continue
             else:
@@ -904,6 +923,8 @@ class TopolBase:
 
         print('', file=fp)
         for itp, where in self.include_itps:
+            if (itp in self.includes) or ('"{0}"'.format(itp) in self.includes): # already included
+                continue
             if where == which:
                 print('#include "{}"'.format(itp), file=fp)
 
@@ -1037,7 +1058,11 @@ class TopolBase:
 
     def write_atoms(self, fp, charges='AB', atomtypes='AB', dummy_qA='on',
                     dummy_qB='on', scale_mass=True, target_qB=[],
-                    full_morphe=True, verbose=False):
+                    full_morphe=True, verbose=False, qPrec=6):
+
+        # number of significant digits for charges in topology
+        if qPrec>10:
+            qPrec=10
 
         self.qA = 0
         self.qB = 0
@@ -1152,13 +1177,13 @@ class TopolBase:
                 else:
                     qqA = atom.q
                     qqB = atom.qB
-                print('%6d %11s%7d%7s%7s%7d%11.6f%11.4f %11s%11.6f%11.4f'
+                print('%6d %11s%7d%7s%7s%7d %11.{0}f%11.4f %11s %11.{0}f%11.4f'.format(qPrec)
                       % (atom.id, atA, atom.resnr, atom.resname,
                          atom.name, atom.cgnr, qqA, mA, atB, qqB, mB), file=fp)
                 self.qA += qqA
                 self.qB += qqB
             else:
-                print('%6d %11s%7d%7s%7s%7d%11.6f%11.4f'
+                print('%6d %11s%7d%7s%7s%7d %11.{0}f%11.4f'.format(qPrec)
                       % (atom.id, atom.atomtype, atom.resnr, atom.resname,
                          atom.name, atom.cgnr, atom.q, atom.m), file=fp)
                 self.qA += atom.q
@@ -1212,6 +1237,12 @@ class TopolBase:
             else:
                 print('%6d %6d %6d %8s' % (p[0].id, p[1].id, p[2], p[3]), file=fp)
 
+    def __print_any_angle(self, ang, fp ):
+        print('%6d %6d %6d %6d' % (ang[0].id, ang[1].id, ang[2].id, ang[3]), file=fp, end='')
+        for p in ang[4]:
+            print('%14.6f ' % p,file=fp,end='')
+        print('\n',file=fp,end='')
+
     def write_angles(self, fp, state='AB'):
         print('\n[ angles ]', file=fp)
         print(';  ai    aj    ak funct            c0            c1            c2            c3', file=fp)
@@ -1237,18 +1268,21 @@ class TopolBase:
 
                 if state == 'AB':
                     # check type here, for charmm its different, Urey-Bradley
-                    if ang[3] == 1:
-                        print('%6d %6d %6d %6d %14.6f %14.6f %14.6f %14.6f ; %s %s %s'
-                              % (ang[0].id, ang[1].id, ang[2].id, ang[3], ang[4][1],
-                                 ang[4][2], ang[5][1], ang[5][2], ang[0].name, ang[1].name, ang[2].name), file=fp)
-                    elif ang[3] == 5:
-                        print('%6d %6d %6d %6d %14.6f %14.6f %14.6f %14.6f %14.6f %14.6f %14.6f %14.6f ; %s %s %s'
-                              % (ang[0].id, ang[1].id, ang[2].id, ang[3], ang[4][1],
-                                 ang[4][2], ang[4][3], ang[4][4], ang[5][1],
-                                 ang[5][2], ang[5][3], ang[5][4],
-                                 ang[0].name, ang[1].name, ang[2].name), file=fp)
-                    else:
-                        raise ValueError("Don't know how to print angletype %d" % ang[3])
+                    try:
+                        if ang[3] == 1:
+                            print('%6d %6d %6d %6d %14.6f %14.6f %14.6f %14.6f ; %s %s %s'
+                                  % (ang[0].id, ang[1].id, ang[2].id, ang[3], ang[4][1],
+                                     ang[4][2], ang[5][1], ang[5][2], ang[0].name, ang[1].name, ang[2].name), file=fp)
+                        elif ang[3] == 5:
+                            print('%6d %6d %6d %6d %14.6f %14.6f %14.6f %14.6f %14.6f %14.6f %14.6f %14.6f ; %s %s %s'
+                                  % (ang[0].id, ang[1].id, ang[2].id, ang[3], ang[4][1],
+                                     ang[4][2], ang[4][3], ang[4][4], ang[5][1],
+                                     ang[5][2], ang[5][3], ang[5][4],
+                                     ang[0].name, ang[1].name, ang[2].name), file=fp)
+                        else:
+                            raise ValueError("Don't know how to print angletype %d" % ang[3])
+                    except:
+                        self.__print_any_angle( ang, fp ) # can be that an angle has parameters for one state only
 
                 elif state == 'AA':
                     if ang[3] == 1:
@@ -1810,6 +1844,92 @@ class Topology(TopolBase):
                 self.posre.append([a, 1, '{0:14.6f} {0:14.6f} {0:14.6f}'.format(k)])
 
         self.has_posre = True
+
+    def as_rtp(self):
+        for i, bond in enumerate(self.bonds):
+            id1 = bond[0].id
+            id2 = bond[1].id
+            self.bonds[i][0] = self.atoms[id1-1]
+            self.bonds[i][1] = self.atoms[id2-1]
+        for i, angle in enumerate(self.angles):
+            id1 = angle[0].id
+            id2 = angle[1].id
+            id3 = angle[2].id
+            self.angles[i][0] = self.atoms[id1-1]
+            self.angles[i][1] = self.atoms[id2-1]
+            self.angles[i][2] = self.atoms[id3-1]
+
+        for i, dih in enumerate(self.dihedrals):
+            id1 = dih[0].id
+            id2 = dih[1].id
+            id3 = dih[2].id
+            id4 = dih[3].id
+            self.dihedrals[i][0] = self.atoms[id1-1]
+            self.dihedrals[i][1] = self.atoms[id2-1]
+            self.dihedrals[i][2] = self.atoms[id3-1]
+            self.dihedrals[i][3] = self.atoms[id4-1]
+
+        for i, vs in enumerate(self.virtual_sites2):
+            id1 = dih[0].id
+            id2 = dih[1].id
+            id3 = dih[2].id
+            self.virtual_sites2[i][0] = self.atoms[id1-1]
+            self.virtual_sites2[i][1] = self.atoms[id2-1]
+            self.virtual_sites2[i][2] = self.atoms[id3-1]
+
+
+    def write_rtp(self, filename ='mol.rtp'):
+        fp = open(filename,'w')
+        fp.write('[ {0} ]\n'.format(self.name))
+        fp.write(' [ atoms ]\n')
+        for atom in self.atoms:
+            fp.write("%8s %-12s %8.6f %5d\n" % \
+                  (atom.name,atom.atomtype,atom.q,atom.cgnr) )
+
+        fp.write(' [ bonds ]\n')
+        for bond in self.bonds:
+            if len(bond)<=3:
+                fp.write("%8s %8s\n"% \
+                      (bond[0].name, bond[1].name) )
+            else:
+                fp.write("%8s %8s %8.4f %8.4f\n"% \
+                      (bond[0].name, bond[1].name, bond[3][0], bond[3][1]) )
+
+        fp.write(' [ angles ]\n')
+        for angle in self.angles:
+            if len(angle)<=4:
+                fp.write("%8s %8s %8s\n"% \
+                      (angle[0].name, angle[1].name,angle[2].name) )
+            elif angle[3]==5: # U-B
+                fp.write("%8s %8s %8s %8.4f %8.4f %8.4f %8.4f\n"% \
+                      (angle[0].name, angle[1].name,angle[2].name,
+                        angle[4][0],angle[4][1],angle[4][2],angle[4][3]) )
+            else:
+                fp.write("%8s %8s %8s %8.4f %8.4f\n"% \
+                      (angle[0].name, angle[1].name,angle[2].name,angle[4][0],angle[4][1]) )
+
+
+        fp.write(' [ dihedrals ]\n')
+        for dih in self.dihedrals:
+            if len(dih)<=5: # no parameters
+                fp.write("%8s %8s %8s %s\n"% \
+                      (dih[0].name, dih[1].name,dih[2].name, dih[3].name))
+            elif dih[4]==3:
+                param = dih[5].split()
+                fp.write("%8s %8s %8s %s %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n"% \
+                      (dih[0].name, dih[1].name,dih[2].name, dih[3].name, float(param[0]), float(param[1]), float(param[2]), float(param[3]), float(param[4]), float(param[5])) )
+            elif (dih[4]==1) or (dih[4]==4) or (dih[4]==9):
+                param = dih[5].split()
+                fp.write("%8s %8s %8s %s %8.4f %8.4f %8.4f\n"% \
+                      (dih[0].name, dih[1].name,dih[2].name, dih[3].name,
+                       float(param[0]), float(param[1]), float(param[2])) )
+            elif (dih[4]==2) or (dih[4]==11):
+                param = dih[5].split()
+                fp.write("%8s %8s %8s %s %8.4f %8.4f\n"% \
+                      (dih[0].name, dih[1].name,dih[2].name, dih[3].name,
+                       float(param[0]), float(param([1]))) )
+
+
 
 class MDPError(Exception):
     """MDP Error class.

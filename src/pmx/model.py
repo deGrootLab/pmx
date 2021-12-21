@@ -87,6 +87,7 @@ from . import chain
 from .atomselection import Atomselection
 from .molecule import Molecule
 from .atom import Atom
+from string import digits
 
 
 __all__ = ['Model']
@@ -125,6 +126,9 @@ class Model(Atomselection):
         Default is True.
     bPDBGAP : bool
         whether search for gaps in the chain to assign new chain IDs.
+    bPDBMASS : bool
+        whether to guess masses from the atom library (will fail for
+        complex atom naming, e.g. ND will not be interpreted as nitrogen)
 
     Attributes
     ----------
@@ -148,7 +152,7 @@ class Model(Atomselection):
     """
     def __init__(self, filename=None, pdbline=None, renumber_atoms=True,
                  renumber_residues=True, rename_atoms=False, scale_coords=None,
-                 bPDBTER=True, bNoNewID=True, bPDBGAP=False,
+                 bPDBTER=True, bNoNewID=True, bPDBGAP=False, bPDBMASS=False,
                  **kwargs):
 
         Atomselection.__init__(self)
@@ -166,7 +170,7 @@ class Model(Atomselection):
             setattr(self, key, val)
 
         if filename is not None:
-            self.read(filename=filename, bPDBTER=bPDBTER, bNoNewID=bNoNewID, bPDBGAP=bPDBGAP)
+            self.read(filename=filename, bPDBTER=bPDBTER, bNoNewID=bNoNewID, bPDBGAP=bPDBGAP, bPDBMASS=bPDBMASS)
         if pdbline is not None:
             self.__readPDB(pdbline=pdbline)
         if self.atoms:
@@ -203,6 +207,8 @@ class Model(Atomselection):
                 raise ValueError('unknown unit %s for coordinates' % scale_coords)
 
         self.assign_moltype()
+
+
 
     def __str__(self):
         s = '< Model: moltype=%s, nchain=%d, nres=%d, natom=%d >' %\
@@ -406,14 +412,15 @@ class Model(Atomselection):
         
     # TODO: make readPDB and readPDBTER a single function. It seems like
     # readPDBTER is more general PDB reader?
-    def __readPDBTER(self, fname=None, pdbline=None, bNoNewID=True, bPDBGAP=False):
+    def __readPDBTER(self, fname=None, pdbline=None, bNoNewID=True, bPDBGAP=False, bPDBMASS=False):
         """Reads a PDB file with more options than __readPDB ?"""
         if pdbline:
             lines = pdbline.split('\n')
         else:
             lines = open(fname, 'r').readlines()
 
-        chainIDstring = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnoprstuvwxyz123456789'
+        chainIDstringInit = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnoprstuvwxyz123456789'
+        chainIDstring = copy.deepcopy(chainIDstringInit)
         bNewChain = True
         chainID = ' '
         prevID = ' '
@@ -435,6 +442,8 @@ class Model(Atomselection):
                     bNewChain = True
                 if (self.__check_if_gap( prevCatom,a )==True and bPDBGAP==True):
                     bNewChain = True
+                if a.resname=='ACE' and prevResName!='ACE':
+                    bNewChain = True
                 if (a.resnr != prevResID):
                     try:
                         if self.__compareWithoutLastChar(prevResID,a.resnr)==True: # there are some special cases where residues are named, e.g. 52, 52A, 52B, ...
@@ -445,8 +454,17 @@ class Model(Atomselection):
                             bNewChain = True
                         if (prevAtomName == 'HH33') and ((prevResName=='NME') or (prevResName=='NAC') or (prevResName=='CT3')): # NME cap
                             bNewChain = True
+                        # do not assign new chain IDs for waters, ions 
+                        if (a.resname=='WAT') or (a.resname=='SOL') or (a.resname=='TIP3') or (a.resname=='HOH') \
+                           or (a.resname=='NA') or (a.resname=='CL') \
+                           or (a.resname=='NaJ') or (a.resname=='Na') or (a.resname=='Cl') or (a.resname=='K') or (a.resname=='KJ') \
+                           or (a.resname=='MG') or (a.resname=='Mg') or (a.resname=='CA') or (a.resname=='Ca') or (a.resname=='CaJ') \
+                           or (a.resname=='ZN') or (a.resname=='Zn'): # add other ions when needed
+                            bNewChain = False
+                            chainID = ''
                     except TypeError:
                         bNewChain = False
+                        chainID = ''
                 prevID = a.chain_id
                 prevResID = a.resnr
                 prevAtomName = a.name
@@ -458,6 +476,10 @@ class Model(Atomselection):
                         # find a new chain id
                         bFound = False
                         while bFound==False:
+                            if len(chainIDstring)==0: # used up all the IDs
+                                chainIDstring = copy.deepcopy(chainIDstringInit)
+                                chainID = "pmxX"
+                                break
                             foo = chainIDstring[0]
                             chainIDstring = chainIDstring.lstrip(chainIDstring[0])
                             if foo not in usedChainIDs:
@@ -489,6 +511,11 @@ class Model(Atomselection):
                     # find a suitable ID
                     bFound = False
                     while bFound==False:
+                        if len(chainIDstring)==0: # used up all the IDs
+                            chainIDstring = copy.deepcopy(chainIDstringInit)
+                            newChainDict[a.chain_id] = "X"
+                            a.chain_id = "X"
+                            break
                         foo = chainIDstring[0]
                         chainIDstring = chainIDstring.lstrip(chainIDstring[0])
                         # found
@@ -501,6 +528,10 @@ class Model(Atomselection):
         self.make_chains()
         self.make_residues()
         self.unity = 'A'
+
+        if bPDBMASS==True:
+            assign_masses_to_model( self )
+
         return self
 
     def __readGRO(self, filename):
@@ -584,7 +615,7 @@ class Model(Atomselection):
         else:
             self.moltype = 'unknown'
 
-    def read(self, filename, bPDBTER=False, bNoNewID=True, bPDBGAP=False):
+    def read(self, filename, bPDBTER=False, bNoNewID=True, bPDBGAP=False, bPDBMASS=False):
         """PDB/GRO file reader.
 
         Parameters
@@ -605,7 +636,7 @@ class Model(Atomselection):
             if bPDBTER is True:
                 return self.__readPDBTER(fname=filename,
                                          pdbline=None,
-                                         bNoNewID=bNoNewID, bPDBGAP=bPDBGAP)
+                                         bNoNewID=bNoNewID, bPDBGAP=bPDBGAP, bPDBMASS=bPDBMASS)
             else:
                 return self.__readPDB(fname=filename)
         elif ext == 'gro':
@@ -931,7 +962,7 @@ def merge_models(*args):
     return model
 
 
-def assign_masses_to_model(model, topology):
+def assign_masses_to_model(model, topology=None):
     '''Assigns masses to the Model atoms given the ones present in the Topology.
 
     Parameters
@@ -939,14 +970,24 @@ def assign_masses_to_model(model, topology):
     model : Model
         Model object of the molecule.
     topology : Topology
-        Topology object of the same molecule.
+        Topology object of the same molecule. When no topology provided, standard library masses are used.
     '''
-    for ma, ta in zip(model.atoms, topology.atoms):
-        if ma.name != ta.name:
-            raise ValueError('mismatch of atom names between Model and '
-                             'Topology objects provided')
-        ma.m = ta.m
-
+    
+    if topology!=None:
+        for ma, ta in zip(model.atoms, topology.atoms):
+            if ma.name != ta.name:
+                raise ValueError('mismatch of atom names between Model and '
+                                 'Topology objects provided')
+            ma.m = ta.m
+    else:
+        for a in model.atoms:
+            aname = a.name
+            aname = aname.upper()
+            aname = aname.translate(str.maketrans('','',digits))
+            if aname not in library._atommass.keys():
+                a.m = 0.0
+            else:
+                a.m = library._atommass[aname]
 
 def double_box(m1, m2, r=2.5, d=1.5, bLongestAxis=False, verbose=False):
     '''Places two structures (two Model objects) into a single box.

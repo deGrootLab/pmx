@@ -1,4 +1,4 @@
-#1_edge  2_prot1_ddg  3_prot1_err  4_prot2_ddg  5_prot2_err  6_prot3_ddg  7_prot3_err
+#1_edge  2_prot1_dg  3_prot1_err  4_prot2_dg  5_prot2_err  6_prot3_dg  7_prot3_err
 #all values in kJ/mol
  28_L_29_L  49.60  0.33  49.16  0.34  48.16  0.34
  28_L_35_L  47.29  1.95  38.30  0.70  39.70  0.72

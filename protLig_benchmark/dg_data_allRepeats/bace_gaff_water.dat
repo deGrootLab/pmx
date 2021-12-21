@@ -1,4 +1,4 @@
-#1_edge  2_water1_ddg  3_water1_err  4_water2_ddg  5_water2_err  6_water3_ddg  7_water3_err
+#1_edge  2_water1_dg  3_water1_err  4_water2_dg  5_water2_err  6_water3_dg  7_water3_err
 #all values in kJ/mol
 CAT-13a_CAT-13m  -318.81  0.32  -318.64  0.34  -319.55  0.31
 CAT-13a_CAT-17g  100.45  0.35  99.25  0.31  99.85  0.36

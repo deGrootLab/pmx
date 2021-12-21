@@ -189,7 +189,8 @@ spelling_show_suggestions = True
 
 
 def setup(app):
-    app.add_stylesheet('custom.css')
+#    app.add_stylesheet('custom.css') # deprecated
+    app.add_css_file('custom.css')
     try:
         from sphinx.ext.autosummary import Autosummary
         from sphinx.ext.autosummary import get_documenter

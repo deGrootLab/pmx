@@ -31,3 +31,14 @@ PDE2, CMET, Bace (Hunt et al), Bace p2, Galectin, JNK1, Tyk2, Bace, MCL1, CDK2, 
 
   dg_data_allRepeats: gaff and cgenff force field dG data for transitions in water and protein separately for each repeat
 
+  mdp: simulation parameter files
+  ```
+	- em_l0.mdp and em_l1.mdp: energy minimization for the states A and B
+	- eq_nvt_l0.mdp and eq_nvt_l1.mdp: 10 ps NVT equilibration for the states A and B
+	- eq_l0.mdp and eq_l1.mdp: 6 ns equilibrium run for the states A and B
+	- ti_l0_gmx46.mdp and ti_l1_gmx46.mdp: 50 ps transition A->B and B->A. 
+These files are meant to be used with a custom gmx4.6 version with an alternative soft-core formulation: 
+pmx.mpibpc.mpg.de/gromacs462_newsc.tar
+	- ti_l0_gmx2018.mdp and ti_l1_gmx2018.mdp: 50 ps transition A->B and B->A. 
+Files to be used with gmx2018 and higher versions
+```

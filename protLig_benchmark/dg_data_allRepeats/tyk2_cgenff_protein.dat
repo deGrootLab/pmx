@@ -1,4 +1,4 @@
-#1_edge  2_prot1_ddg  3_prot1_err  4_prot2_ddg  5_prot2_err  6_prot3_ddg  7_prot3_err
+#1_edge  2_prot1_dg  3_prot1_err  4_prot2_dg  5_prot2_err  6_prot3_dg  7_prot3_err
 #all values in kJ/mol
 ejm_31_ejm_43  293.34  0.65  301.66  0.50  297.35  0.55
 ejm_31_ejm_45  150.23  0.45  150.61  0.51  146.17  0.54

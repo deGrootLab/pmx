@@ -61176,3 +61176,110 @@ C5  C4  C6  C5M
         OW      HW1
         OW      HW2
         HW1     HW2
+
+; VG: phosphothreonine q=-2
+[ TPO ]
+ [ atoms ]
+       N NH1          -0.470000     1
+      HN H            0.310000     2
+      CA CT1          0.070000     3
+      HA HB1          0.090000     4
+      CB CT1          -0.090000     5
+      HB HA1          0.090000     6
+     OG1 ON2          -0.400000     7
+       P P            1.100000     8
+     O1P ON3          -0.900000     9
+     O2P ON3          -0.900000    10
+     O3P ON3          -0.900000    11
+     CG2 CT3          -0.270000    12
+    HG21 HA3          0.090000    13
+    HG22 HA3          0.090000    14
+    HG23 HA3          0.090000    15
+       C C            0.510000    16
+       O O            -0.510000    17
+
+ [ bonds ]
+       N       HN 
+       N       CA 
+      CA       CB 
+      CA        C 
+      CA       HA 
+      CB      OG1 
+      CB      CG2 
+      CB       HB 
+     OG1        P 
+       P      O3P 
+       P      O1P 
+       P      O2P 
+     CG2     HG21 
+     CG2     HG22 
+     CG2     HG23 
+       C        O 
+       C       +N
+
+ [ angles ]
+      HN        N       CA 
+       N       CA       HA 
+       N       CA       CB 
+       N       CA        C 
+      HA       CA       CB 
+      HA       CA        C 
+      CB       CA        C 
+      CA       CB       HB 
+      CA       CB      OG1 
+      CA       CB      CG2 
+      HB       CB      OG1 
+      HB       CB      CG2 
+     OG1       CB      CG2 
+      CB      OG1        P 
+     OG1        P      O1P 
+     OG1        P      O2P 
+     OG1        P      O3P 
+     O1P        P      O2P 
+     O1P        P      O3P 
+     O2P        P      O3P 
+      CB      CG2     HG21 
+      CB      CG2     HG22 
+      CB      CG2     HG23 
+    HG21      CG2     HG22 
+    HG21      CG2     HG23 
+    HG22      CG2     HG23 
+      CA        C        O 
+
+ [ dihedrals ]
+       N       CA       CB HB 
+       N       CA       CB OG1 
+       N       CA       CB CG2 
+       N       CA        C O 
+      HN        N       CA HA 
+      HN        N       CA CB 
+      HN        N       CA C 
+      CA       CB      OG1 P 
+      CA       CB      CG2 HG21 
+      CA       CB      CG2 HG22 
+      CA       CB      CG2 HG23 
+      HA       CA       CB HB 
+      HA       CA       CB OG1 
+      HA       CA       CB CG2 
+      HA       CA        C O 
+      CB       CA        C O 
+      CB      OG1        P O1P 
+      CB      OG1        P O2P 
+      CB      OG1        P O3P
+       C       CA       CB HB 
+      HB       CB      OG1 P 
+      HB       CB      CG2 HG21 
+      HB       CB      CG2 HG22 
+      HB       CB      CG2 HG23 
+       C       CA       CB OG1 
+     OG1       CB      CG2 HG21 
+     OG1       CB      CG2 HG22 
+     OG1       CB      CG2 HG23 
+     CG2       CB      OG1 P 
+       C       CA       CB CG2 
+
+  [ impropers ]
+            N    -C    CA    HN
+            C    CA    +N     O
+  [ cmap ]
+           -C     N    CA     C    +N

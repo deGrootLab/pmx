@@ -1,0 +1,45 @@
+atomMapping__log_> Morphable atoms will be identified using the following methods:
+atomMapping__log_> Alignment: True
+atomMapping__log_> MCS: True
+atomMapping__log_> Initializing the main LigandsAtomMapping object
+atomMapping__log_> The topology matching approach will be used (MCS)
+atomMapping__log_> fmcs module: Copyright (c) 2012 Andrew Dalke Scientific AB
+atomMapping__log_> MCS: trying to run an MCS using all atoms: modified molecules, match elements...
+atomMapping__log_> MCS searching...
+atomMapping__log_> Found 1 MCSs in total (mol1: 1, mol2: 1), each with 22 atoms and 23 bonds
+atomMapping__log_> Chirality check.
+atomMapping__log_> Avoiding breaking rings.
+atomMapping__log_> Final MCS that survived after pruning: 33 atoms
+atomMapping__log_> MCS: all atoms, modified molecules, size of mapping: 33
+atomMapping__log_> MCS: trying to run an MCS using all atoms: unmodified molecules, match elements...
+atomMapping__log_> MCS searching...
+atomMapping__log_> Found 1 MCSs in total (mol1: 1, mol2: 1), each with 22 atoms and 23 bonds
+atomMapping__log_> Chirality check.
+atomMapping__log_> Avoiding breaking rings.
+atomMapping__log_> Final MCS that survived after pruning: 33 atoms
+atomMapping__log_> MCS: all atoms, unmodified molecules, size of mapping: 33
+atomMapping__log_> MCS: trying to run an MCS using rings only...
+atomMapping__log_> MCS searching...
+atomMapping__log_> Found 4 MCSs in total (mol1: 2, mol2: 2), each with 6 atoms and 6 bonds
+atomMapping__log_> Chirality check.
+atomMapping__log_> Avoiding breaking rings.
+atomMapping__log_> Final MCS that survived after pruning: 9 atoms
+atomMapping__log_> MCS: using variant with the mapping size of 33
+atomMapping__log_> The alignment approach will be used
+atomMapping__log_> Tosco, P., Balle, T. & Shiri, F. Open3DALIGN: an open-source software aimed at unsupervised ligand alignment. J Comput Aided Mol Des 25:777-83 (2011)
+atomMapping__log_> Alignment is based on atom logP contributions: S. A. Wildman and G. M. Crippen JCICS _39_ 868-873 (1999)
+atomMapping__log_> Alignment: trying to align all atoms...
+atomMapping__log_> Avoiding breaking rings.
+atomMapping__log_> Alignment: size of mapping: 25
+atomMapping__log_> Alignment: trying to align rings only...
+atomMapping__log_> Avoiding breaking rings.
+atomMapping__log_> Size of mapping: 31
+atomMapping__log_> Alignment: using ring only alignment result.
+atomMapping__log_> The final result is based on the MCS.
+
+atomMapping__log_> Final results:
+atomMapping__log_> Atoms considered in mol1: 39
+atomMapping__log_> Atoms considered in mol2: 39
+atomMapping__log_> Morphable atoms in both molecules: 33 33
+atomMapping__log_> Dissimilarity (distance) score: 0.1538
+
