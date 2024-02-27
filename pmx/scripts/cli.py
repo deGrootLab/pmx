@@ -37,19 +37,19 @@ class PmxCli:
         getattr(self, args.command)()
 
     def mutate(self):
-        import mutate
+        from . import mutate
         mutate.entry_point()
 
     def gentop(self):
-        import generate_hybrid_topology
+        from . import generate_hybrid_topology
         generate_hybrid_topology.entry_point()
 
     def analyse(self):
-        import analyze_dhdl
+        from . import analyze_dhdl
         analyze_dhdl.entry_point()
 
     def gmxlib(self):
-        import set_gmxlib
+        from . import set_gmxlib
         set_gmxlib.entry_point()
 
 
@@ -62,8 +62,8 @@ def check_unknown_cmd(unknowns):
 
     for cmd in unknowns:
         if cmd not in expected:
-            print('Unknown command found in your command line: "{}". '
-                  'This command will be ignored'.format(cmd))
+            print(('Unknown command found in your command line: "{}". '
+                  'This command will be ignored'.format(cmd)))
 
 
 def entry_point():

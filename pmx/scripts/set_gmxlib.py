@@ -13,12 +13,12 @@ def main():
           '  available in pmx, the environment variable GMXLIB needs to be set.\n')
 
     print('  The path to your pmx force field library for proteins is:')
-    print('  %s\n' % gmxlib_proteins)
+    print(('  %s\n' % gmxlib_proteins))
     print('  The path to your pmx force field library for nucleic acids is:')
-    print('  %s\n' % gmxlib_nuc_acids)
+    print(('  %s\n' % gmxlib_nuc_acids))
 
     print('  Set the relevant GMXLIB path in your shell session as follows:')
-    print('  $ export GMXLIB=%s\n' % gmxlib_proteins)
+    print(('  $ export GMXLIB=%s\n' % gmxlib_proteins))
     print('  Or you can add this directly in your bashrc file.\n')
 
 

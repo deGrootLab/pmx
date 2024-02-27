@@ -40,14 +40,14 @@ dna_res = ['DA','DG','DT','DC']
 rna_res = ['RA','RU','RC','RG']
 
 def chain_type(ch):
-    if ch.residues[0].resname in library._one_letter.keys():
+    if ch.residues[0].resname in list(library._one_letter.keys()):
         return 'pep'
     elif ch.residues[0].resname in dna_res:
         return 'dna'
     elif ch.residues[0].resname in rna_res:
         return 'rna'
     else: return 'unk'
-    
+
 
 # describe what the script does
 
@@ -68,8 +68,8 @@ help_text =("This script reads a structure file",
 files= [
     FileOption("-f","r",["pdb"],"protein.pdb","Input pdb file"),
     FileOption("-o","w",["pdb","gro"],"amber.pdb","Input pdb/gro file"),
-]    
-   
+]
+
 
 # define options
 
@@ -87,7 +87,7 @@ model = Model(cmdl['-f'])
 
 
 # now check cysteines
-print '\nChecking cys....'
+print('\nChecking cys....')
 cysl = model.fetch_residues('CYS')     # get a list with all cysteines
 
 # we do a simple check. If a HG is there it's CYS, else it's CYS2
@@ -107,30 +107,30 @@ for res in cysl:
         if ss_bond:
             # terminal cys2 is ccyx
             rr = 'CYS2'
-            print 'Residue %d-%s (chain %s) will become %s' % (res.id, res.resname,res.chain_id,rr)
+            print('Residue %d-%s (chain %s) will become %s' % (res.id, res.resname,res.chain_id,rr))
             res.set_resname(rr)
         else:
-            print 'Residue %d-%s (chain %s) will become %s' % (res.id, res.resname,res.chain_id,'CYM')
+            print('Residue %d-%s (chain %s) will become %s' % (res.id, res.resname,res.chain_id,'CYM'))
             res.set_resname('CYM')
-            
+
     else:
         res.set_resname('CYN')
-        print 'Residue %d-%s (chain %s) will become %s' % (res.id, res.resname, res.chain_id, res.resname)
+        print('Residue %d-%s (chain %s) will become %s' % (res.id, res.resname, res.chain_id, res.resname))
 
 
 # lysine
-print 'Checking lys....'
+print('Checking lys....')
 lysl = model.fetch_residues('LYS')
 for res in lysl:
     at = res.fetch('HZ3')
     at2 = res.fetch('HZ2')
     if at or not at2:
         res.set_resname('LYP')
-    print 'Residue %d-%s (chain %s) will become %s' % (res.id, 'LYS', res.chain_id, res.resname)
-        
+    print('Residue %d-%s (chain %s) will become %s' % (res.id, 'LYS', res.chain_id, res.resname))
+
 
 # histidine
-print 'Checking his......'
+print('Checking his......')
 hisl = model.fetch_residues('HIS')
 for res in hisl:
     bHE2 = False
@@ -147,50 +147,50 @@ for res in hisl:
         res.set_resname('HIE')
     else:
         res.set_resname('HID')
-    print 'Residue %d-%s (chain %s) will become %s' % (res.id, 'HIS', res.chain_id, res.resname)
+    print('Residue %d-%s (chain %s) will become %s' % (res.id, 'HIS', res.chain_id, res.resname))
 
-print 'Checking asp......'
+print('Checking asp......')
 aspl = model.fetch_residues('ASP')
 for res in aspl:
     bHD2 = False
     hd2 = res.fetch('HD2')
     if hd2:
         res.set_resname('ASH')
-    print 'Residue %d-%s (chain %s) will become %s' % (res.id, 'ASP', res.chain_id, res.resname)
+    print('Residue %d-%s (chain %s) will become %s' % (res.id, 'ASP', res.chain_id, res.resname))
 
-print 'Checking glu......'
+print('Checking glu......')
 glul = model.fetch_residues('GLU')
 for res in glul:
     bHD2 = False
     hd2 = res.fetch('HE2')
     if hd2:
         res.set_resname('GLH')
-    print 'Residue %d-%s (chain %s) will become %s' % (res.id, 'GLU', res.chain_id, res.resname)
-        
-        
+    print('Residue %d-%s (chain %s) will become %s' % (res.id, 'GLU', res.chain_id, res.resname))
 
-print 'Checking termini.....'
+
+
+print('Checking termini.....')
 for chain in model.chains:
-    print 'Processing chain %s' % chain.id
+    print('Processing chain %s' % chain.id)
     ct = chain_type(chain)
-    print 'Chain type of chain %s: %s' % (chain.id, ct.upper())
+    print('Chain type of chain %s: %s' % (chain.id, ct.upper()))
     first = chain.residues[0]      # first residue
     last = chain.residues[-1]      # last residue
     if ct == 'pep':
-        if first.resname in library._one_letter.keys():
+        if first.resname in list(library._one_letter.keys()):
             first.set_resname('N'+first.resname) # rename e.g. ALA to NALA
-        if last.resname in library._one_letter.keys():
+        if last.resname in list(library._one_letter.keys()):
             if last.resname == 'CYS2':
                 last.set_resname('CCYX')   # rename e.g. ARG to CARG
             else:
                 last.set_resname('C'+last.resname)   # rename e.g. ARG to CARG
         elif last.resname in library._ions: # find last protein residue
-            print 'Searching last peptide residue in chain %s' % chain.id
+            print('Searching last peptide residue in chain %s' % chain.id)
             found = False
             idx = chain.residues.index(last)-1
             while not found:
                 r = chain.residues[idx]
-                if r.resname in library._one_letter.keys():
+                if r.resname in list(library._one_letter.keys()):
                     if r.resname == 'CYS2':
                         r.set_resname('CCYX')
                     else:
@@ -209,9 +209,9 @@ for chain in model.chains:
                 o1.name = 'OC1'
                 o2.name = 'OC2'
             except:
-                print 'Error: No terminal O1, O2 atoms found in chain %s' % chain.id
-                print '       In pdb2gmx generated structures these should be there.'
-                print '       Exiting'
+                print('Error: No terminal O1, O2 atoms found in chain %s' % chain.id)
+                print('       In pdb2gmx generated structures these should be there.')
+                print('       Exiting')
                 sys.exit(1)
     elif ct in ['dna','rna']:
         first.set_resname(first.resname+'5')
@@ -230,7 +230,7 @@ for chain in model.chains:
 
 
 
-        
+
 # hack to get pdb file with 4 character residue names
 #for atom in model.atoms:
 #    atom.chain_id = ' '
@@ -238,8 +238,6 @@ for chain in model.chains:
 #        atom.chain_id = atom.resname[-1]+atom.chain_id
 model.write(cmdl['-o'])
 ## fp = open(cmdl['-o'],'w')
-## print 'Writing ouput to: %s' % cmdl['-o'] 
+## print 'Writing ouput to: %s' % cmdl['-o']
 ## for atom in model.atoms:
 ##     print >>fp, atom
-
-

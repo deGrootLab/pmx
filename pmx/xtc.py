@@ -28,7 +28,8 @@
 # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 # ----------------------------------------------------------------------
 
-import sys, os, xdrfile
+import sys, os
+from . import xdrfile
 
 
 class Trajectory(xdrfile.XDRFile):
@@ -40,9 +41,3 @@ class Trajectory(xdrfile.XDRFile):
 
     def get_natoms(self):
         return self.natoms
-
-
-
-
-
-

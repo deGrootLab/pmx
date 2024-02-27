@@ -61,8 +61,27 @@ static PyMethodDef pmx_methods[]={
   {NULL,NULL,0,NULL}
 };
 
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "_pmx",     /* m_name */
+    "This is a module",  /* m_doc */
+    -1,                  /* m_size */
+    pmx_methods,    /* m_methods */
+    NULL,                /* m_reload */
+    NULL,                /* m_traverse */
+    NULL,                /* m_clear */
+    NULL,                /* m_free */
+};
+PyMODINIT_FUNC PyInit__pmx(void)
+{
+  PyMODINIT_FUNC m = PyModule_Create(&moduledef);
+  return m;
+}
+#else
 void init_pmx(void)
 {
   (void) Py_InitModule3("_pmx",pmx_methods,NULL);
 }
-
+#endif

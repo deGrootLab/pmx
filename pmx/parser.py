@@ -45,7 +45,7 @@ Usage:
 """
 
 import sys
-from odict import *
+from .odict import *
 
 class ParserError(Exception):
     def __init__(self, s):
@@ -84,7 +84,7 @@ def __parse_error(msg, line):
     s+= "\nTrouble is here -> %s" % line
     raise ParserError(s)
 ##     print >>sys.stderr, "pmx_Error_> %s" % msg
-##     print >>sys.stderr, "pmx_Error_> Trouble is here -> %s" % line 
+##     print >>sys.stderr, "pmx_Error_> Trouble is here -> %s" % line
 ##     sys.exit(1)
 
 def __parse_entry(entr, tp):
@@ -93,16 +93,16 @@ def __parse_entry(entr, tp):
         new = entr
     elif tp == 'i':
         try:
-            new = int(entr) 
+            new = int(entr)
         except:
             __parse_error("Integer conversion failed", entr)
     elif tp == 'f':
         try:
-            new = float(entr) 
+            new = float(entr)
         except:
             __parse_error("Float conversion failed", entr)
     return new
-    
+
 
 def parseList(format_string, lst, ignore_missing = False):
     ret = []
@@ -117,7 +117,7 @@ def parseList(format_string, lst, ignore_missing = False):
             new_list.append( __parse_entry( entr[i], tp ) )
         ret.append( new_list )
     return ret
-            
+
 
 def read_and_format(filename, format_string, comment = '#', ignore_missing = False):
     l = open(filename).readlines()
@@ -158,9 +158,6 @@ def read_xvg( fn,  style='xy'):
     if style == 'list':
         return res
     else:
-        x = map(lambda a: a[0],  res)        
-        y = map(lambda a: a[1],  res)
+        x = [a[0] for a in res]
+        y = [a[1] for a in res]
         return x,  y
-
-
-

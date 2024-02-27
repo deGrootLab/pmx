@@ -85,7 +85,7 @@ class Option(OptionBase):
         self.parsed_opts = []
 
     def __error(self, arg):
-        print >>sys.stderr,"Error: Option \"%s\" (%s) is not compatible with argument ->" % (self.flag, self.type), arg
+        print("Error: Option \"%s\" (%s) is not compatible with argument ->" % (self.flag, self.type), arg, file=sys.stderr)
         sys.exit(1)
 
     def __get_arg( self, arg):
@@ -302,7 +302,7 @@ class Commandline:
         self.__make_option_dic()
         if self.opt['-h'].value == True:
             self.__print_program_descr()
-        print self
+        print(self)
         if self.opt['-h'].value == True:
             sys.exit(0)
         self.__check_for_unparsed_args()
@@ -311,12 +311,12 @@ class Commandline:
 
 
     def __print_program_descr(self):
-        print
-        print 'HELP TEXT for "%s"' %  (self.prog_name)
-        print '---------------------------------------------------------------------------------------------------------\n'
+        print()
+        print('HELP TEXT for "%s"' %  (self.prog_name))
+        print('---------------------------------------------------------------------------------------------------------\n')
 
         for line in self.program_desc:
-            print line.rstrip()
+            print(line.rstrip())
 
     def __make_option_dic(self ):
         for opt in self.options+self.fileoptions:
@@ -340,7 +340,7 @@ class Commandline:
         olist = []
         for opt in self.options+self.fileoptions:
             if opt.flag in olist:
-                print >>sys.stderr, "Error: Option flag \"%s\" defined multiple times" % opt.flag
+                print("Error: Option flag \"%s\" defined multiple times" % opt.flag, file=sys.stderr)
                 sys.exit(1)
             olist.append( opt.flag )
 
@@ -387,14 +387,14 @@ class Commandline:
         for flag in self.flag_list:
             n = self.flag_list.count( flag )
             if n != 1:
-                print >>sys.stderr,"Error: Flag \"%s\" appears %d times in commandline" %(flag, n)
+                print("Error: Flag \"%s\" appears %d times in commandline" %(flag, n), file=sys.stderr)
                 sys.exit(1)
 
     def __check_for_unparsed_args(self):
         error_occured = False
         for i, arg in enumerate(self.cmdline):
             if i not in self.parsed_opts:
-                print >>sys.stderr,"Error: Unknown argument \"%s\" in commandline" %(arg)
+                print("Error: Unknown argument \"%s\" in commandline" %(arg), file=sys.stderr)
                 error_occured = True
         if error_occured:
             sys.exit(1)
@@ -406,7 +406,7 @@ class Commandline:
             if o.mode[0]=='r':
                 for f in o.filenames:
                     if not os.path.isfile(f):
-                        print >>sys.stderr, "Error: File \"%s\" does not exist!" % f
+                        print("Error: File \"%s\" does not exist!" % f, file=sys.stderr)
                         error_occured = True
         if error_occured:
             sys.exit(1)
@@ -436,5 +436,5 @@ if __name__=='__main__':
     cmdl = Commandline( sys.argv, options = options, fileoptions = files, program_desc = help_text, check_for_existing_files = False )
 
 
-    print cmdl['-pdb']
-    print cmdl['-pdb2']
+    print(cmdl['-pdb'])
+    print(cmdl['-pdb2'])

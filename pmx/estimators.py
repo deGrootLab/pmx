@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+
 import numpy as np
 import sys
 from scipy.optimize import fmin
@@ -971,7 +971,7 @@ def ks_norm_test(data, alpha=0.05, refks=None):
     check = np.sqrt(N)*dmax
     if not refks:
         refks = ksref()
-    lst = filter(lambda x: x[1] > siglev, refks)
+    lst = [x for x in refks if x[1] > siglev]
     lam0 = lst[0][0]
     if check >= lam0:
         bOk = False

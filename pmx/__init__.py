@@ -43,11 +43,11 @@ __version__ = get_versions()['version']
 del get_versions
 
 import os
-from atom import *
-from molecule import *
-from chain import *
-from model import *
-from options import *
+from .atom import *
+from .molecule import *
+from .chain import *
+from .model import *
+from .options import *
 
 
 XX       =  0

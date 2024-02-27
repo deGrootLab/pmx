@@ -33,9 +33,9 @@ Some functions to deal with tCNC data
 """
 
 import sys, os
-from parser import *
+from .parser import *
 from numpy import *
-import library
+from . import library
 
 def read_atom_types(f):
     if hasattr(f,"read"):
@@ -68,65 +68,65 @@ def read_atom_types(f):
 
 def make_lib_dic(f):
     keys, dic = read_atom_types(f)
-    print 'atom_types = {'
+    print('atom_types = {')
     for key in keys:
         val = dic[key]
-        print "\t'%s': {" % key
-        for name, entr in val.items():
-            print "\t\t\"%s\" : {" % name
-            print "\t\t\t'type':'%s'," % entr['type']
-            print "\t\t\t'hyb':'%s'" % entr['hyb']
-            print "\t\t},"
-        print "\t},"
-    print "}"
+        print("\t'%s': {" % key)
+        for name, entr in list(val.items()):
+            print("\t\t\"%s\" : {" % name)
+            print("\t\t\t'type':'%s'," % entr['type'])
+            print("\t\t\t'hyb':'%s'" % entr['hyb'])
+            print("\t\t},")
+        print("\t},")
+    print("}")
 
-                
+
 def assign_types(model,verbose=False):
     atom_types = library._atom_types
     # default first
     dic = atom_types['DEFAULT']
     for atom in model.atoms:
         name = atom.long_name.strip()
-        if dic.has_key(name):
+        if name in dic:
             atom.atype = dic[name]['type']
             atom.hyb = dic[name]['hyb']
     #if isinstance(model,pmx.Model) or isinstance(model,pmx.Chain):
     if hasattr( model, "residues" ):
         for r in model.residues:
             key = r.resname
-            if atom_types.has_key(key):
+            if key in atom_types:
                 dic = atom_types[key]
                 for atom in r.atoms:
                     name = atom.long_name.strip()
-                    if dic.has_key(name):
+                    if name in dic:
                         atom.atype = dic[name]['type']
                         atom.hyb = dic[name]['hyb']
     else:
     #elif isinstance(model,pmx.Molecule):
         key = model.resname
-        if atom_types.has_key(key):
+        if key in atom_types:
             dic = atom_types[key]
             for atom in model.atoms:
                 name = atom.long_name.strip()
-                if dic.has_key(name):
+                if name in dic:
                     atom.atype = dic[name]['type']
                     atom.hyb = dic[name]['hyb']
-        
+
     # check if we got all
     # and do generic
     dic = atom_types['GENERIC']
     for atom in model.atoms:
         if atom.atype == '':
-            if dic.has_key(atom.symbol):
+            if atom.symbol in dic:
                 atom.atype = dic[atom.symbol]['type']
                 if verbose:
-                    print 'Using generic atom type for atom %d-%s/%d-%s (%s)' %\
-                          (atom.id, atom.name, atom.resnr, atom.resname, atom.long_name)
+                    print('Using generic atom type for atom %d-%s/%d-%s (%s)' %\
+                          (atom.id, atom.name, atom.resnr, atom.resname, atom.long_name))
             else:
-                print 'Could not assign atom type to atom %d-%s/%d-%s' %\
-                          (atom.id, atom.name, atom.resnr, atom.resname)
-            
-            
+                print('Could not assign atom type to atom %d-%s/%d-%s' %\
+                          (atom.id, atom.name, atom.resnr, atom.resname))
+
+
 def assign_radii(model):
     try:
         lst = open('Atomradii.dat').readlines()
@@ -136,7 +136,7 @@ def assign_radii(model):
     lst = kickOutComments(lst,';')
     tps = readSection(lst,'[ TYPES ]','[')
     tps = parseList('sff',tps)
-    types = map(lambda a: a[0], tps)
+    types = [a[0] for a in tps]
     dic = {}
     pdic = {}
     for i, line in enumerate(tps):
@@ -152,7 +152,7 @@ def assign_radii(model):
         comb = parseList('ssf',comb)
         comb14 = readSection(lst,'[ 14_COMBINATIONS ]','[')
         comb14 = parseList('ssf',comb14)
-    
+
         size = len(tps)
         table = zeros((size,size))
         table14 = zeros((size,size))
@@ -171,9 +171,6 @@ def assign_radii(model):
             idx2 = types.index(c[1])
             table14[idx1][idx2] = c[2]
             table14[idx2][idx1] = c[2]
-        
+
         model.vdwtab = table
         model.vdw14tab = table14
-    
-
-

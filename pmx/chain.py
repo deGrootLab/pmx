@@ -39,7 +39,7 @@ Basic Usage:
      - ch.atoms     -> list of atoms
      .
      .
-     
+
      Some methods:
      >>> ch.get_sequence()    # return sequence in one-letter code
      >>> first_res = ch.residues[0].copy() # copy first residue
@@ -47,11 +47,12 @@ Basic Usage:
      >>> ch.insert(5,first_res)  # insert residue at position 5
      .
      .
-     
+
 """
-from atomselection import *
-from molecule import *
-import copy, library
+from .atomselection import *
+from .molecule import *
+import copy
+from . import library
 #import builder
 
 class Chain(Atomselection):
@@ -63,13 +64,13 @@ class Chain(Atomselection):
         self.model = None
         self.nres = 0
         self.id = ''
-        for key, val in kwargs.items():
+        for key, val in list(kwargs.items()):
             setattr(self,key,val)
         if self.residues:
             self.al_from_resl()
         if seq:
             self.create( seq )
-            
+
     def __str__(self):
         s = '< Chain: id = %s nres = %d natoms = %d >' % \
             (self.id, len(self.residues), len(self.atoms))
@@ -79,7 +80,7 @@ class Chain(Atomselection):
         res = self.residues[item]
         self.remove_residue(res)
 
-        
+
     def get_sequence(self):
         """ returns the sequence as string (for fasta format)"""
         seq = ''
@@ -107,19 +108,19 @@ class Chain(Atomselection):
             for atom in r.atoms:
                 self.atoms.append(atom)
                 atom.chain = self
-                
+
     def insert_residue(self,pos,mol,newResNum=False):
         if self.model is not None:
             have_model = True
         else:
             have_model = False
-        if pos not in range(len(self.residues)+1):
-            raise ValueError, 'Chain has only %d residues' % \
-                  len(self.residues)
+        if pos not in list(range(len(self.residues)+1)):
+            raise ValueError('Chain has only %d residues' % \
+                  len(self.residues))
         else:
             mol.set_resid(-999)
-	    if newResNum != False:
-		mol.set_resid(newResNum)
+            if newResNum != False:
+                mol.set_resid(newResNum)
             mol.set_chain_id(self.id)
             mol.chain = self
             if pos == len(self.residues):
@@ -134,7 +135,7 @@ class Chain(Atomselection):
             if have_model:
                 self.model.residues.insert(idx_model,mol)
                 self.residues.insert(pos,mol)
-		if newResNum==False:
+                if newResNum==False:
                     self.model.renumber_residues()
                 self.model.al_from_resl()
                 self.model.renumber_atoms()
@@ -145,12 +146,12 @@ class Chain(Atomselection):
                     self.residues.append(mol)
                 else:
                     self.residues.insert(pos,mol)
-		if newResNum==False:
+                if newResNum==False:
                     self.renumber_residues()
                 self.al_from_resl()
                 self.renumber_atoms()
         self.make_residue_tree()
-        
+
     def renumber_residues(self):
         for i, res in enumerate(self.residues):
             res.set_resid(i+1)
@@ -166,9 +167,9 @@ class Chain(Atomselection):
             resl = chain.residues
         else:
             resl = chain
-        if pos not in range(len(self.residues)+1):
-            raise ValueError, 'Chain has only %d residues' % \
-                  len(self.residues)
+        if pos not in list(range(len(self.residues)+1)):
+            raise ValueError('Chain has only %d residues' % \
+                  len(self.residues))
         if pos == len(self.residues):
             m = self.residues[-1]
             if have_model:
@@ -177,7 +178,7 @@ class Chain(Atomselection):
             m = self.residues[pos]
             if have_model:
                 idx_model = self.model.residues.index(m)
-        
+
         first = self.residues[:pos]
         last = self.residues[pos:]
         for res in resl:
@@ -222,22 +223,22 @@ class Chain(Atomselection):
                 self.atoms.append(atom)
         if midx!=-1:
             self.model.renumber_atoms()
-	    if bKeepResNum==False:
+            if bKeepResNum==False:
                 self.model.renumber_residues()
         self.make_residue_tree()
-        
+
     def replace_residue(self,residue, new, bKeepResNum=False):
         idx = self.residues.index(residue)
-	if bKeepResNum==True:
+        if bKeepResNum==True:
             self.insert_residue(idx,new,residue.id)
-	else:
-	    self.insert_residue(idx,new)
+        else:
+            self.insert_residue(idx,new)
         self.remove_residue(residue,bKeepResNum)
 
     def remove_atom(self,atom):
         m = atom.molecule
         m.remove_atom(atom)
-        
+
     def fetch_residues(self,key, inv=False):
         if not hasattr(key,"append"):
             key = [key]
@@ -251,7 +252,7 @@ class Chain(Atomselection):
                 if r.resname not in key:
                     result.append(r)
         return result
-    
+
     def set_chain_id(self,chain_id):
         old_id = self.id
         self.id = chain_id
@@ -260,11 +261,11 @@ class Chain(Atomselection):
         if self.model:
             self.model.chdic[chain_id] = self
             del self.model.chdic[old_id]
-            
+
 
     def append(self,mol):
         if not isinstance(mol,Molecule):
-            raise TypeError, "%s is not a Molecule instance" % str(mol)
+            raise TypeError("%s is not a Molecule instance" % str(mol))
         else:
             n = len(self.residues)
             self.insert_residue(n,mol)
@@ -284,8 +285,8 @@ class Chain(Atomselection):
             if self.unity=='A':
                 d*=.1
             if d > 0.45:
-                print 'Warning: Long Bond %d-%s <-> %d-%s' %\
-                      (r.id,r.resname,r2.id,r2.resname)
+                print('Warning: Long Bond %d-%s <-> %d-%s' %\
+                      (r.id,r.resname,r2.id,r2.resname))
             else:
                 c.bonds.append(n)
                 n.bonds.append(c)
@@ -308,7 +309,7 @@ class Chain(Atomselection):
             elif r.resname == 'GLU': r.mol2_resname = 'glu-'
             elif r.resname == 'ASP': r.mol2_resname = 'asp-'
             else: r.mol2_resname = r.resname.lower()
-            
+
 
     def add_nterm_cap(self):
         if self.unity =='nm':
@@ -327,7 +328,7 @@ class Chain(Atomselection):
         vec = array(ca.x)-array(n.x)
         x = 1./linalg.norm(vec)
         n.x = array(ca.x)-vec*x
-        m.set_resname('ACE')        
+        m.set_resname('ACE')
         if changed:
             self.a2nm()
 
@@ -361,8 +362,8 @@ class Chain(Atomselection):
         m.set_resname('NME')
         if changed:
             self.a2nm()
-        
-        
+
+
     def attach_chain(self, newchain, phi = -139., psi = 135.):
         if self.unity =='nm':
             self.nm2a()
@@ -375,7 +376,7 @@ class Chain(Atomselection):
         self.insert_chain(len(self.residues), ch)
         if changed:
             self.a2nm()
-        
+
 
     def __prepare_nterm_for_extension(self):
         nterm = self.nterminus()
@@ -393,7 +394,7 @@ class Chain(Atomselection):
                     except:
                         h1 = nterm.fetch('HN')[0] # will become H
                         h1.name = 'H'
-                
+
             else:
                 try:
                     del nterm['H1']
@@ -417,11 +418,11 @@ class Chain(Atomselection):
                 del nterm['H3']
             except:
                 pass
-            
+
     def __prepare_cterm_for_extension(self):
         cterm = self.cterminus()
         if  cterm.resname not in library._protein_residues:
-            print " Cannot attach to this residue! ", cterm.resname
+            print(" Cannot attach to this residue! ", cterm.resname)
             sys.exit(1)
         a = cterm.fetch_atoms('OXT')
         if a:
@@ -438,7 +439,7 @@ class Chain(Atomselection):
         a = cterm.fetch_atoms('O\'')
         if a:
             a[0].name = 'O'
-        
+
 
     def cbuild(self, resn, next_phi = -139., psi = 135.):
         if len(resn) == 1:
@@ -490,38 +491,38 @@ class Chain(Atomselection):
         for atom in new.atoms:
             atom.x = r.apply(atom.x,pi/3.)
 
-            
+
         # do next rotation
         # here we correct the C-N-Ca angle
 
 
         # special correction for proline
         if new.resname == 'PRO':
-             N, CA2,H = new.fetchm(['N','CA','CD'])
-             Ca, C, O, Nn = cterm.fetchm(['CA','C','O','N'])
-             v1 = array(N.x)-array(CA2.x)
-             v2 = array(H.x)-array(N.x)
-             cr = cross(v1,v2)
-             x = 1./linalg.norm(cr)
-             cr = cr*x
-             v3 = array(Ca.x)-array(C.x)
-             v4 = array(C.x)-array(O.x)
-             cr2 = cross(v3,v4)
-             x = 1./linalg.norm(cr2)
-             cr2 = cr2*x
-             d = dot(cr,cr2)
-             dd = arccos(dot(cr,cr2))
-             v5 = cross(cr,cr2)
-             x = 1./linalg.norm(v5)
-             v5 = v5*x
-             rv = N.x + v5
-             r = Rotation(rv,N.x)
-             for atom in new.atoms:
-                 if atom.name !='N':
-                     atom.x = r.apply(atom.x,-dd)
+            N, CA2,H = new.fetchm(['N','CA','CD'])
+            Ca, C, O, Nn = cterm.fetchm(['CA','C','O','N'])
+            v1 = array(N.x)-array(CA2.x)
+            v2 = array(H.x)-array(N.x)
+            cr = cross(v1,v2)
+            x = 1./linalg.norm(cr)
+            cr = cr*x
+            v3 = array(Ca.x)-array(C.x)
+            v4 = array(C.x)-array(O.x)
+            cr2 = cross(v3,v4)
+            x = 1./linalg.norm(cr2)
+            cr2 = cr2*x
+            d = dot(cr,cr2)
+            dd = arccos(dot(cr,cr2))
+            v5 = cross(cr,cr2)
+            x = 1./linalg.norm(v5)
+            v5 = v5*x
+            rv = N.x + v5
+            r = Rotation(rv,N.x)
+            for atom in new.atoms:
+                if atom.name !='N':
+                    atom.x = r.apply(atom.x,-dd)
 
 
-             
+
         Ca, C, O = cterm.fetchm(['CA','C','O'])
         N, CA2 = new.fetchm(['N','CA'])
         v1 = array(N.x)-array(C.x)
@@ -541,7 +542,7 @@ class Chain(Atomselection):
                 atom.x = r.apply(atom.x,-delta)
 
         an = N.angle(C,CA2)
-         
+
         if new.resname == 'PRO':
             CD = new.fetch('CD')[0]
             aa = N.angle(CD,C, degree=True)
@@ -570,14 +571,14 @@ class Chain(Atomselection):
             self.a2nm()
 
 
-        
-    def nbuild(self, resn, phi = -139., psi = 135.): 
+
+    def nbuild(self, resn, phi = -139., psi = 135.):
 
         if len(resn) == 1:
             resn = library._aacids_dic[resn]
 #        new = builder.make_residue(resn,hydrogens = True)
         new = Molecule().new_aa(resn)
-        
+
         # we need Ca, C and O from nterm
         Ca, C, O, Nn = new.fetchm(['CA','C','O','N'])
         # and N from new
@@ -599,18 +600,18 @@ class Chain(Atomselection):
         vec = v*x*l
         newpos = array(N.x)+vec
         t = array(C.x)-newpos
-        
+
         # shift to new position
         for a in new.atoms:
             a.x = array(a.x)-t
         # get Ca,C,O and N,H,CA2 in plane
-        
+
         v1 = array(N.x)-array(CA2.x)
         v2 = array(H.x)-array(N.x)
         cr = cross(v1,v2)
         x = 1./linalg.norm(cr)
         cr = cr*x
-        
+
         v3 = array(Ca.x)-array(C.x)
         v4 = array(C.x)-array(O.x)
         cr2 = cross(v3,v4)
@@ -652,13 +653,13 @@ class Chain(Atomselection):
         for atom in new.atoms:
             if atom.name !='C':
                 atom.x = r.apply(atom.x,dd)
-        dih = CA2.dihedral(N,C,Ca) 
+        dih = CA2.dihedral(N,C,Ca)
         delta = pi-dih
         r = Rotation(N.x,C.x)
         for atom in new.atoms:
             if atom.name !='C':
                 atom.x = r.apply(atom.x,delta)
-        ang = Nn.dihedral(Ca,C,N) 
+        ang = Nn.dihedral(Ca,C,N)
         dd = pi - ang
         r = Rotation(C.x,Ca.x)
         for atom in new.atoms:
@@ -666,7 +667,7 @@ class Chain(Atomselection):
                 atom.x = r.apply(atom.x,dd)
 
 
-        dih = H.dihedral(N,C,O) 
+        dih = H.dihedral(N,C,O)
         delta = pi-dih
         r = Rotation(N.x,C.x)
         O.x = r.apply(O.x,delta)
@@ -688,7 +689,7 @@ class Chain(Atomselection):
 ##                     phi_psi.append( [-57,-47] )
 ##                 elif ss[i] == 'E':
 ##                     phi_psi.append( [-139, 135] )
-                    
+
 ##         if not phi_psi:
 ##             print seq, len(seq)
 ##             for i in range(len(seq)):
@@ -702,7 +703,7 @@ class Chain(Atomselection):
         resn = library._aacids_dic[first_res]
 #        new = builder.make_residue(resn,hydrogens = True)
         new = Molecule().new_aa(resn)
-        
+
         self.residues.append( new )
         new.chain = self
 ##         new.set_phi( phi_psi[0][0] )
@@ -712,7 +713,7 @@ class Chain(Atomselection):
         for i, aa in enumerate(seq[1:]):
             self.cbuild(aa) #, phi_psi[i+1][0], phi_psi[i+1][1])
         return self
-        
+
 
     def fuse(self, new, phi=-139, psi=135 ):
         if new.unity != 'A': newchain.nm2a()
@@ -755,28 +756,28 @@ class Chain(Atomselection):
 
         # special correction for proline
         if nterm.resname == 'PRO':
-             N, CA2,H = nterm.fetchm(['N','CA','CD'])
-             Ca, C, O, Nn = cterm.fetchm(['CA','C','O','N'])
-             v1 = array(N.x)-array(CA2.x)
-             v2 = array(H.x)-array(N.x)
-             cr = cross(v1,v2)
-             x = 1./linalg.norm(cr)
-             cr = cr*x
-             v3 = array(Ca.x)-array(C.x)
-             v4 = array(C.x)-array(O.x)
-             cr2 = cross(v3,v4)
-             x = 1./linalg.norm(cr2)
-             cr2 = cr2*x
-             d = dot(cr,cr2)
-             dd = arccos(dot(cr,cr2))
-             v5 = cross(cr,cr2)
-             x = 1./linalg.norm(v5)
-             v5 = v5*x
-             rv = N.x + v5
-             r = Rotation(rv,N.x)
-             for atom in new.atoms:
-                 if atom.name !='N' or atom.molecule != nterm:
-                     atom.x = r.apply(atom.x,-dd)
+            N, CA2,H = nterm.fetchm(['N','CA','CD'])
+            Ca, C, O, Nn = cterm.fetchm(['CA','C','O','N'])
+            v1 = array(N.x)-array(CA2.x)
+            v2 = array(H.x)-array(N.x)
+            cr = cross(v1,v2)
+            x = 1./linalg.norm(cr)
+            cr = cr*x
+            v3 = array(Ca.x)-array(C.x)
+            v4 = array(C.x)-array(O.x)
+            cr2 = cross(v3,v4)
+            x = 1./linalg.norm(cr2)
+            cr2 = cr2*x
+            d = dot(cr,cr2)
+            dd = arccos(dot(cr,cr2))
+            v5 = cross(cr,cr2)
+            x = 1./linalg.norm(v5)
+            v5 = v5*x
+            rv = N.x + v5
+            r = Rotation(rv,N.x)
+            for atom in new.atoms:
+                if atom.name !='N' or atom.molecule != nterm:
+                    atom.x = r.apply(atom.x,-dd)
 
         Ca, C, O = cterm.fetchm(['CA','C','O'])
         N, CA2 = nterm.fetchm(['N','CA'])
@@ -839,9 +840,9 @@ class Chain(Atomselection):
                         r.next = next_res
                         next_res.previous = r
                     else:
-                        print >>sys.stderr, 'Gap between residues ', r, '< - >', next_res, 'dist = ', d
+                        print('Gap between residues ', r, '< - >', next_res, 'dist = ', d, file=sys.stderr)
                         self.residue_tree_ok = False
-                            
+
     def cterminus(self):
         i = len(self.residues) - 1
         r = self.residues[i]
@@ -861,7 +862,7 @@ class Chain(Atomselection):
             r = self.residues[i]
             if r.is_protein_residue(): return r
         return None
-    
+
     def rename_atoms(self):
         for atom in self.atoms:
             atom.make_long_name()
@@ -878,6 +879,3 @@ class Chain(Atomselection):
 
     def residue(self, idx):
         return self.residues[idx-1]
-
-
-

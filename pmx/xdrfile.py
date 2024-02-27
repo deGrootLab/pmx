@@ -1,24 +1,24 @@
 #  -*- mode: python; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*-
-# 
+#
 #  $Id$
-# 
+#
 #  Copyright (c) Erik Lindahl, David van der Spoel 2003-2007.
 #  Coordinate compression (c) by Frans van Hoesel.
 #  Python wrapper (c) by Roland Schulz
-# 
+#
 #  IN contrast to the rest of Gromacs, XDRFILE is distributed under the
 #  BSD license, so you can use it any way you wish, including closed source:
-# 
+#
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
 #  to deal in the Software without restriction, including without limitation
 #  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 #  and/or sell copies of the Software, and to permit persons to whom the
 #  Software is furnished to do so, subject to the following conditions:
-# 
+#
 #  The above copyright notice and this permission notice shall be included in
 #  all copies or substantial portions of the Software.
-# 
+#
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 #  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,7 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
-# 
+#
 #  Adapted by Daniel Seeliger for use in the pmx package (Aug 2015)
 #
 import numpy as np
@@ -42,9 +42,9 @@ class Frame:
     #variables
     #x: rvec*natoms / numpy array if installed
     #box DIM*DIM
-    #step 
-    #time 
-    #prec 
+    #step
+    #time
+    #prec
     #lam: lambda
 
     def __init__(self,n,mode,x=None,box=None,units=None,v=None,f=None):
@@ -55,7 +55,7 @@ class Frame:
             scale = 1.0
             if units == 'A':
                 scale=0.1
-            self.x=((c_float*3)*n)() 
+            self.x=((c_float*3)*n)()
             i=0
             for a in range(0,self.natoms):
                 for dim in range(0,3):
@@ -64,7 +64,7 @@ class Frame:
         elif mode&mNumPy and mode!=out_mode:
             self.x=empty((n,3),dtype=float32)
         else:
-            self.x=((c_float*3)*n)() 
+            self.x=((c_float*3)*n)()
 
         # dummy v and f for .trr
         self.v_size = c_size_t(0)
@@ -117,17 +117,17 @@ class Frame:
         return self.step
     def get_prec(self):
         return self.prec
-	def get_box(self, mode='std'):
-		if mode == 'std':
-			box = [[0.,0.,0.],
-				   [0.,0.,0.],
-				   [0.,0.,0.]]
-		elif mode == 'numpy':
-			box = np.zeros((3,3))
-		for i in range(3):
-			for k in range(3):
-				box[i][k] = self.box[i][k]
-		return box
+        def get_box(self, mode='std'):
+            if mode == 'std':
+                box = [[0.,0.,0.],
+                           [0.,0.,0.],
+                           [0.,0.,0.]]
+            elif mode == 'numpy':
+                box = np.zeros((3,3))
+            for i in range(3):
+                for k in range(3):
+                    box[i][k] = self.box[i][k]
+            return box
 
 
 
@@ -140,28 +140,28 @@ class Frame:
 
 
 class XDRFile:
-    exdrOK, exdrHEADER, exdrSTRING, exdrDOUBLE, exdrINT, exdrFLOAT, exdrUINT, exdr3DX, exdrCLOSE, exdrMAGIC, exdrNOMEM, exdrENDOFFILE, exdrNR = range(13)
+    exdrOK, exdrHEADER, exdrSTRING, exdrDOUBLE, exdrINT, exdrFLOAT, exdrUINT, exdr3DX, exdrCLOSE, exdrMAGIC, exdrNOMEM, exdrENDOFFILE, exdrNR = list(range(13))
 
     #
     def __init__(self,fn,mode="Auto",ft="Auto",atomNum=False):
         if mode=="NumPy":
-          self.mode=mNumPy
-          try:
-            empty
-          except NameError:
-              raise IOError("NumPy selected but not correctly installed")
+            self.mode=mNumPy
+            try:
+                empty
+            except NameError:
+                raise IOError("NumPy selected but not correctly installed")
         elif mode=="Std":
-          self.mode=0
+            self.mode=0
         elif mode=="Auto":
-          self.mode=auto_mode
+            self.mode=auto_mode
         elif mode=='Out':
-          self.mode=out_mode
-        else: 
-          raise IOError("unsupported mode")
-          
+            self.mode=out_mode
+        else:
+            raise IOError("unsupported mode")
+
         if ft=="Auto":
-          ft = os.path.splitext(fn)[1][1:]
-         
+            ft = os.path.splitext(fn)[1][1:]
+
         if self.mode!=out_mode:
             if ft=="trr":
                 self.mode|=mTrr
@@ -169,27 +169,27 @@ class XDRFile:
                 pass
             else:
                 raise IOError("Only xtc and trr supported")
-        
+
         #load libxdrfil
-        try: 
-          p = os.path.join(os.path.dirname(__file__),'_xdrio.so')
-          self.xdr=cdll.LoadLibrary(p)
+        try:
+            p = os.path.join(os.path.dirname(__file__),'_xdrio.cpython-310-x86_64-linux-gnu.so')
+            self.xdr=cdll.LoadLibrary(p)
         except:
-          raise IOError("_xdrio.so can't be loaded")
- 
-          
+            raise IOError("_xdrio.so can't be loaded")
+
+
         #open file
         if self.mode==out_mode:
             self.xd = self.xdr.xdrfile_open(fn,"w")
         else:
             self.xd = self.xdr.xdrfile_open(fn,"r")
         if not self.xd: raise IOError("Cannot open file: '%s'"%fn)
-        
+
         #read natoms
         natoms=c_int()
         if self.mode==out_mode:
             if atomNum==False:
-                raise StandardError("To write an .xtc need to provide the number of atoms")
+                raise Exception("To write an .xtc need to provide the number of atoms")
             self.natoms = atomNum
         else:
             if self.mode&mTrr:
@@ -198,7 +198,7 @@ class XDRFile:
                 r=self.xdr.read_xtc_natoms(fn,byref(natoms))
             if r!=self.exdrOK: raise IOError("Error reading: '%s'"%fn)
             self.natoms=natoms.value
-        
+
         #for NumPy define argtypes - ndpointer is not automatically converted to POINTER(c_float)
         #alternative of ctypes.data_as(POINTER(c_float)) requires two version for numpy and c_float array
         if self.mode&mNumPy and self.mode!=out_mode:
@@ -218,7 +218,7 @@ class XDRFile:
             result = self.xdr.write_trr(self.xd,self.natoms,step,time,lam,f.box,f.x,f.v,f.f)
         else:
             result = self.xdr.write_xtc(self.xd,self.natoms,step,time,f.box,f.x,prec)
-        
+
     def __iter__(self):
         f = Frame(self.natoms,self.mode)
         #temporary c_type variables (frame variables are python type)
@@ -235,15 +235,14 @@ class XDRFile:
                 else:
                     result = self.xdr.read_trr(self.xd,self.natoms,byref(step),byref(time),byref(lam),f.box,f.x,None,None) #TODO: make v,f possible
                     f.lam=lam.value
-                
+
                 #check return value
                 if result==self.exdrENDOFFILE: break
-                if result==self.exdrINT and self.mode&mTrr: 
-                  break  #TODO: dirty hack. read_trr return exdrINT not exdrENDOFFILE
+                if result==self.exdrINT and self.mode&mTrr:
+                    break  #TODO: dirty hack. read_trr return exdrINT not exdrENDOFFILE
                 if result!=self.exdrOK: raise IOError("Error reading xdr file")
-            
-                #convert c_type to python 
+
+                #convert c_type to python
                 f.step=step.value
                 f.time=time.value
                 yield f
-        

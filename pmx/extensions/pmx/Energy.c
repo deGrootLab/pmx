@@ -284,7 +284,7 @@ PyObject *wrap_calc_improper_energy(PyObject *self, PyObject *args)
 
   phi0 = PyFloat_AsDouble( PySequence_GetItem(dihedO, 5) );
   kb = PyFloat_AsDouble( PySequence_GetItem(dihedO, 6) );
-  mult = PyInt_AsLong( PySequence_GetItem(dihedO, 7) );
+  mult = PyLong_AsLong( PySequence_GetItem(dihedO, 7) );
 
   real energy = calc_improper_energy( atom1, atom2, atom3, atom4, kb, phi0, mult);
   return Py_BuildValue("d",energy);
@@ -312,7 +312,7 @@ PyObject *wrap_total_improper_energy(PyObject *self, PyObject *args)
     PyObject *atom4 = PySequence_GetItem(dihedO,3);
     phi0 = PyFloat_AsDouble( PySequence_GetItem(dihedO, 5) );
     kb = PyFloat_AsDouble( PySequence_GetItem(dihedO, 6) );
-    mult = PyInt_AsLong( PySequence_GetItem(dihedO, 7) );
+    mult = PyLong_AsLong( PySequence_GetItem(dihedO, 7) );
 
     energy += calc_improper_energy( atom1, atom2, atom3, atom4, kb, phi0, mult);
   }
@@ -331,7 +331,7 @@ real nb_lj_energy( PyObject *atomlist )
     int nn = PySequence_Length( nb_list );
     for(k=0;k<nn;k++){
       PyObject *nb_atom = PySequence_Fast_GET_ITEM(nb_list,k);
-      int atom_id = PyInt_AsLong( PyObject_GetAttrString(nb_atom, "id")) - 1;
+      int atom_id = PyLong_AsLong( PyObject_GetAttrString(nb_atom, "id")) - 1;
       if( i < atom_id ) {
 	energy += calc_lj_energy( atom, nb_atom, fudgeLJ);
       }
@@ -352,7 +352,7 @@ real lj14_energy( PyObject *atomlist )
     int nn = PySequence_Length( nb_list );
     for(k=0;k<nn;k++){
       PyObject *nb_atom = PySequence_Fast_GET_ITEM(nb_list,k);
-      int atom_id = PyInt_AsLong( PyObject_GetAttrString(nb_atom, "id")) - 1;
+      int atom_id = PyLong_AsLong( PyObject_GetAttrString(nb_atom, "id")) - 1;
       if( i < atom_id ) {
 	energy += calc_lj_energy( atom, nb_atom, fudgeLJ);
       }
@@ -373,7 +373,7 @@ real nb_coul_energy( PyObject *atomlist )
     int nn = PySequence_Length( nb_list );
     for(k=0;k<nn;k++){
       PyObject *nb_atom = PySequence_Fast_GET_ITEM(nb_list,k);
-      int atom_id = PyInt_AsLong( PyObject_GetAttrString(nb_atom, "id")) - 1;
+      int atom_id = PyLong_AsLong( PyObject_GetAttrString(nb_atom, "id")) - 1;
       if( i < atom_id ) {
 	energy += calc_coulomb_energy( atom, nb_atom, fudgeQQ);
       }
@@ -394,7 +394,7 @@ real coul14_energy( PyObject *atomlist )
     int nn = PySequence_Length( nb_list );
     for(k=0;k<nn;k++){
       PyObject *nb_atom = PySequence_Fast_GET_ITEM(nb_list,k);
-      int atom_id = PyInt_AsLong( PyObject_GetAttrString(nb_atom, "id")) - 1;
+      int atom_id = PyLong_AsLong( PyObject_GetAttrString(nb_atom, "id")) - 1;
       if( i < atom_id ) {
 	energy += calc_coulomb_energy( atom, nb_atom, fudgeQQ);
       }
@@ -417,7 +417,7 @@ real nb_energy( PyObject *atomlist )
     int nn = PySequence_Length( nb_list );
     for(k=0;k<nn;k++){
       PyObject *nb_atom = PySequence_Fast_GET_ITEM(nb_list,k);
-      int atom_id = PyInt_AsLong( PyObject_GetAttrString(nb_atom, "id")) - 1;
+      int atom_id = PyLong_AsLong( PyObject_GetAttrString(nb_atom, "id")) - 1;
       if( i < atom_id ) {
 	energy += calc_coulomb_energy( atom, nb_atom, fudgeQQ);
 	energy += calc_lj_energy( atom, nb_atom, fudgeLJ);

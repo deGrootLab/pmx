@@ -31,10 +31,10 @@ __doc__="""
 Functions to read the mutation database
 """
 import sys,os
-from model import Model
-from atom import Atom
-from molecule import Molecule
-from parser import *
+from .model import Model
+from .atom import Atom
+from .molecule import Molecule
+from .parser import *
 
 def read_mutpdb(filename='mutations_oplsaa.pdb'):
     if not hasattr(filename,"read"):
@@ -57,7 +57,7 @@ def read_new_mtp_entry( entry, filename = 'mutres.mtp'):
         lst = open(filename).readlines()
     else:
         lst = filename.readlines()
-        
+
     lst = kickOutComments(lst,';')
     key = '[ '+entry+' ]'
     keyw = ('[ morphes ]', '[ atoms ]','[ impropers ]','[ dihedrals ]',\
@@ -85,7 +85,7 @@ def read_new_mtp_entry( entry, filename = 'mutres.mtp'):
             'n1':n1,
             't1':t1,
             }
-    atoms = [] 
+    atoms = []
     al = readSection(res,'[ atoms ]','[')
     for i, line in enumerate(al):
         entr = line.split()
@@ -131,7 +131,7 @@ def read_new_mtp_entry( entry, filename = 'mutres.mtp'):
     bonds = []
     return mol, bonds, imps, diheds, rotdic
 
-    
+
 
 
 def read_mtp_entry(entry,filename='ffamber99sb.mtp', version = 'old'):
@@ -141,7 +141,7 @@ def read_mtp_entry(entry,filename='ffamber99sb.mtp', version = 'old'):
         lst = open(filename).readlines()
     else:
         lst = filename.readlines()
-        
+
     lst = kickOutComments(lst,';')
     key = '[ '+entry+' ]'
     keyw = ('[ morphes ]', '[ atoms ]','[ bonds ]','[ impropers ]',\
@@ -173,8 +173,8 @@ def read_mtp_entry(entry,filename='ffamber99sb.mtp', version = 'old'):
             'r1':r1,
             't1':t1,
             }
-        
-    atoms = [] 
+
+    atoms = []
     al = readSection(res,'[ atoms ]','[')
     for i, line in enumerate(al):
         entr = line.split()
@@ -234,7 +234,7 @@ def read_mtp(filename = 'ffoplsaa.mtp'):
 
     keyw = ('[ atoms ]','[ bonds ]','[ impropers ]',\
             '[ dihedrals ]','[ rotations ]')
-    
+
     entries = []
     for line in lst:
         if line.startswith('[') and line.strip() not in keyw:
@@ -243,8 +243,3 @@ def read_mtp(filename = 'ffoplsaa.mtp'):
     for e in entries:
         rdic[e] = read_mtp_entry(e,filename)
     return rdic
-
-
-    
-
-

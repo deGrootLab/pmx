@@ -45,14 +45,15 @@ Basic Usage:
 
       - output
       >>> print atom   # prints atom in pdb format
-      
+
 
 """
 
-import _pmx as _p
+from . import _pmx as _p
 from numpy import *
-import copy, library
-from library import pdb_format, pdb_format2
+import copy
+from . import library
+from .library import pdb_format, pdb_format2
 
 class Atom:
     """ class for storage of atom properties and methods"""
@@ -100,13 +101,13 @@ class Atom:
         self.ptype = ''
         self.long_name = ''
         self.unity='A'
-        for key, val in kwargs.items():
+        for key, val in list(kwargs.items()):
             setattr(self,key,val)
         if line is not None:
             self.readPDBString(line)
         if mol2line is not None:
             self.read_mol2_line(mol2line)
-            
+
     def readPDBString(self,line,origID=0):
         """PDB String to Atom"""
 
@@ -122,7 +123,7 @@ class Atom:
         except:
             self.resnr=line[22:27] # contains insertion code
 #            self.resnr=int(line[22:27][:-1])
-            
+
         self.x=[float(line[30:38]),\
                            float(line[39:46]),float(line[47:54])]
         try:
@@ -179,14 +180,14 @@ class Atom:
             self.x[1]*=.1
             self.x[2]*=.1
             self.unity = 'nm'
-            
+
     def angle(self,other1,other2,degree=None):
         """ Calcluates the angle between 3 atoms
         Usage: atom1.angle(atom2,atom3)
         The degree flag causes the function to return the angle
         in degrees.
         (Note: atom1 must be between 2 and 3)"""
-        
+
         angle= _p.angle(other1.x,self.x,other2.x)
         if degree:
             return angle*180.0/pi
@@ -199,7 +200,7 @@ class Atom:
         Usage: atom1.dihedral(atom2,atom3,atom4)
         The degree flag causes the function to return the dihedral
         in degrees."""
-        
+
         ang=_p.dihedral(self.x,other1.x,other2.x,other3.x)
         if degree:
             return ang*180.0/pi
@@ -209,7 +210,7 @@ class Atom:
     def __str__(self):
         """ prints the atom in PDB format """
         if self.unity=='nm':
-            coords = map(lambda x: x*10, self.x)
+            coords = [x*10 for x in self.x]
         else:
             coords = self.x
         if len(self.resname)<4:
@@ -263,8 +264,8 @@ class Atom:
         and order"""
         # check for aliases first
         ali = library._aliases
-        if ali.has_key(self.resname) and \
-           ali[self.resname].has_key(self.name):
+        if self.resname in ali and \
+           self.name in ali[self.resname]:
             name = ali[self.resname][self.name]
         else:
             name = self.name.strip()
@@ -333,7 +334,7 @@ class Atom:
             else:
                 self.symbol = 'UN'
 ##             print 'Using symbol %s for atom %s-%s' %\
-##                   (self.symbol,self.name,self.resname) 
+##                   (self.symbol,self.name,self.resname)
     def get_order(self):
         """ get the order (number of bonds to mainchain)"""
         if self.long_name == '':
@@ -341,9 +342,9 @@ class Atom:
         if self.symbol == '':
             self.get_symbol()
         if self.resname not in library._protein_residues:
-            print 'Sorry, implemented for proteins only'
+            print('Sorry, implemented for proteins only')
             return
-        
+
         el = self.symbol
         x = self.long_name[2]
         if self.name in ['C','CA','N']: self.order = 0
@@ -352,7 +353,7 @@ class Atom:
                            'O2','OC1','OC2','OXT',
                            'OT1','OT2']:
             self.order = 1
-        else:    
+        else:
             if el!='H':
                 if x=='B': self.order = 1
                 elif x=='G': self.order = 2
@@ -396,10 +397,7 @@ class Atom:
             self.unity = 'A'
             self.symbol = self.atype.split('.')[0]
         else:
-            print 'Error: Cannot convert line to atom'
-            print line
+            print('Error: Cannot convert line to atom')
+            print(line)
             sys.exit(1)
         return self
-    
-
-

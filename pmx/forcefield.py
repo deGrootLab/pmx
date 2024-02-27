@@ -31,13 +31,13 @@ __doc__="""
 Functions to read gromacs forcefield files
 """
 import sys,os,re, copy
-from parser import *
-import cpp
-from atom import Atom
-from odict import *
-from library import _aliases
-from ffparser import *
-import _pmx as _p
+from .parser import *
+from . import cpp
+from .atom import Atom
+from .odict import *
+from .library import _aliases
+from .ffparser import *
+from  . import _pmx as _p
 
 def get_bond_param(type1,type2,bond_lib):
     for entr in bond_lib:
@@ -57,7 +57,7 @@ def get_angle_param(type1,type2,type3,ang_lib):
             type2 == entr[1] and \
             type3 == entr[0]):
             return entr[3:]
-    return None 
+    return None
 
 def get_dihedral_param(type1,type2,type3,type4,dih_lib, func):
     for entr in dih_lib:
@@ -119,7 +119,7 @@ def get_dihedral_param(type1,type2,type3,type4,dih_lib, func):
             'X' == entr[1] and \
             type4 == entr[0] and func==entr[4]):
             return entr[4:]
-    return None 
+    return None
 
 
 
@@ -143,7 +143,7 @@ class ITPFile:
         self.has_vsites4 = False
         if fname:
             self.read(fname, ff = ff)
-            
+
     def read(self,fname, ff = None):
         if not hasattr(fname,"readlines"):
             lines = open(fname).readlines()
@@ -160,7 +160,7 @@ class ITPFile:
         self.atomtypes = read_atomtypes(lines,ff)
         self.read_vsites2(lines)
 
-        
+
     def write(self,fname):
         if not hasattr(fname,"write"):
             fp = open(fname,"w")
@@ -178,17 +178,17 @@ class ITPFile:
             write_itp_dihedrals(fp, self.dihedrals)
         if self.has_vsites2:
             self.write_itp_vsites2(fp)
-            
+
     def write_itp_vsites2(self, fp ):
-        print >>fp, '[ virtual_sites2 ]'
+        print('[ virtual_sites2 ]', file=fp)
         for v in self.virtual_sites2:
-            print >>fp, "%8d %8d %8d %s %s" % (v[0].id, v[1].id, v[2].id, v[3], v[4])
-        
+            print("%8d %8d %8d %s %s" % (v[0].id, v[1].id, v[2].id, v[3], v[4]), file=fp)
+
     def set_name(self, name):
         self.name = name
         for atom in self.atoms:
             atom.resname = name
-        
+
     def as_rtp(self):
         for i, bond in enumerate(self.bonds):
             id1 = bond[0]
@@ -202,7 +202,7 @@ class ITPFile:
             self.angles[i][0] = self.atoms[id1-1]
             self.angles[i][1] = self.atoms[id2-1]
             self.angles[i][2] = self.atoms[id3-1]
-            
+
         for i, dih in enumerate(self.dihedrals):
             id1 = dih[0]
             id2 = dih[1]
@@ -230,7 +230,7 @@ class ITPFile:
             id2 = bond[1]
             self.bonds[i][0] = self.atoms[id1-1]
             self.bonds[i][1] = self.atoms[id2-1]
-            
+
         for i, pairs in enumerate(self.pairs):
             id1 = pairs[0]
             id2 = pairs[1]
@@ -244,7 +244,7 @@ class ITPFile:
             self.angles[i][0] = self.atoms[id1-1]
             self.angles[i][1] = self.atoms[id2-1]
             self.angles[i][2] = self.atoms[id3-1]
-            
+
         for i, dih in enumerate(self.dihedrals):
             id1 = dih[0]
             id2 = dih[1]
@@ -255,57 +255,57 @@ class ITPFile:
             self.dihedrals[i][2] = self.atoms[id3-1]
             self.dihedrals[i][3] = self.atoms[id4-1]
 
-        
-            
+
+
     def write_rtp(self, filename ='mol.rtp'):
         fp = open(filename,'w')
-        print >>fp, '[ %s ]' % self.name
-        print >>fp, ' [ atoms ]'
+        print('[ %s ]' % self.name, file=fp)
+        print(' [ atoms ]', file=fp)
         for atom in self.atoms:
-            print >>fp, "%8s %-12s %8.6f %5d" % \
-                  (atom.name,atom.atomtype,atom.q,atom.cgnr)
+            print("%8s %-12s %8.6f %5d" % \
+                  (atom.name,atom.atomtype,atom.q,atom.cgnr), file=fp)
 
-        print >>fp, '\n [ bonds ]'
+        print('\n [ bonds ]', file=fp)
         for bond in self.bonds:
-	    if len(bond)<=3:
-                print >>fp, "%8s %8s "% \
-                      (bond[0].name, bond[1].name)
-	    else:
-                print >>fp, "%8s %8s %8.4f %8.4f "% \
-                      (bond[0].name, bond[1].name, bond[3], bond[4])
+            if len(bond)<=3:
+                print("%8s %8s "% \
+                      (bond[0].name, bond[1].name), file=fp)
+            else:
+                print("%8s %8s %8.4f %8.4f "% \
+                      (bond[0].name, bond[1].name, bond[3], bond[4]), file=fp)
 
-            
-        print >>fp, '\n [ angles ]'
+
+        print('\n [ angles ]', file=fp)
         for angle in self.angles:
-	    if len(angle)<=4:
-                print >>fp, "%8s %8s %8s "% \
-                      (angle[0].name, angle[1].name,angle[2].name)
-	    elif angle[3]==5: # U-B
-                print >>fp, "%8s %8s %8s %8.4f %8.4f %8.4f %8.4f "% \
+            if len(angle)<=4:
+                print("%8s %8s %8s "% \
+                      (angle[0].name, angle[1].name,angle[2].name), file=fp)
+            elif angle[3]==5: # U-B
+                print("%8s %8s %8s %8.4f %8.4f %8.4f %8.4f "% \
                       (angle[0].name, angle[1].name,angle[2].name,
-			angle[4],angle[5],angle[6],angle[7])
-	    else:
-                print >>fp, "%8s %8s %8s %8.4f %8.4f "% \
-                      (angle[0].name, angle[1].name,angle[2].name,angle[4],angle[5])
-		
+                        angle[4],angle[5],angle[6],angle[7]), file=fp)
+            else:
+                print("%8s %8s %8s %8.4f %8.4f "% \
+                      (angle[0].name, angle[1].name,angle[2].name,angle[4],angle[5]), file=fp)
 
-        print >>fp, '\n [ dihedrals ]'
+
+        print('\n [ dihedrals ]', file=fp)
         for dih in self.dihedrals:
-	    if len(dih)<=5: # no parameters
-                print >>fp, "%8s %8s %8s %s "% \
-                      (dih[0].name, dih[1].name,dih[2].name, dih[3].name) 
-	    elif dih[4]==3:
-                print >>fp, "%8s %8s %8s %s %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f "% \
+            if len(dih)<=5: # no parameters
+                print("%8s %8s %8s %s "% \
+                      (dih[0].name, dih[1].name,dih[2].name, dih[3].name), file=fp)
+            elif dih[4]==3:
+                print("%8s %8s %8s %s %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f "% \
                       (dih[0].name, dih[1].name,dih[2].name, dih[3].name,
-                       dih[5], dih[6], dih[7], dih[8], dih[9], dih[10])
-	    elif (dih[4]==1) or (dih[4]==4) or (dih[4]==9):
-                print >>fp, "%8s %8s %8s %s %8.4f %8.4f %8.4f "% \
+                       dih[5], dih[6], dih[7], dih[8], dih[9], dih[10]), file=fp)
+            elif (dih[4]==1) or (dih[4]==4) or (dih[4]==9):
+                print("%8s %8s %8s %s %8.4f %8.4f %8.4f "% \
                       (dih[0].name, dih[1].name,dih[2].name, dih[3].name,
-                       dih[5], dih[6], dih[7])
+                       dih[5], dih[6], dih[7]), file=fp)
             elif (dih[4]==2) or (dih[4]==11):
-                print >>fp, "%8s %8s %8s %s %8.4f %8.4f "% \
+                print("%8s %8s %8s %s %8.4f %8.4f "% \
                       (dih[0].name, dih[1].name,dih[2].name, dih[3].name,
-                       dih[5], dih[6])
+                       dih[5], dih[6]), file=fp)
 
 #        print >>fp, '\n [ impropers ]'
 #        for dih in self.impropers:
@@ -318,7 +318,7 @@ class ITPFile:
 #            elif dih[4]==4:
 #                print >>fp, "%8s %8s %8s %s %8.4f %8.4f %8.4f "% \
 #                      (dih[0].name, dih[1].name,dih[2].name, dih[3].name, dih[5], dih[6], dih[7])
-            
+
 
     def read_vsites2(self, lines):
         starts = []
@@ -333,7 +333,7 @@ class ITPFile:
             for line in lst:
                 entr = line.split()
                 idx = [int(x) for x in entr[:3]]
-                
+
                 func = int(entr[3])
                 try:
                     rest = ' '.join(entr[4:])
@@ -358,7 +358,7 @@ class ITPFile:
             for line in lst:
                 entr = line.split()
                 idx = [int(x) for x in entr[:4]]
-                
+
                 func = int(entr[4])
                 try:
                     rest = ' '.join(entr[5:])
@@ -383,7 +383,7 @@ class ITPFile:
             for line in lst:
                 entr = line.split()
                 idx = [int(x) for x in entr[:5]]
-                
+
                 func = int(entr[5])
                 try:
                     rest = ' '.join(entr[6:])
@@ -395,7 +395,7 @@ class ITPFile:
                                             self.atoms[idx[3]-1],\
                                             self.atoms[idx[4]-1],\
                                             func,rest])
-                
+
 
 class Topology:
 
@@ -403,7 +403,7 @@ class Topology:
         self.filename = filename
         self.is_itp = itp
         if self.is_itp and top == None:
-            print "Error:You have to provide the .top file if you read a .itp"
+            print("Error:You have to provide the .top file if you read a .itp")
             sys.exit(1)
         if top is not None:
             self.topfile = top
@@ -433,8 +433,8 @@ class Topology:
             self.NBParams = NBParser( l )
 #            self.types, self.bond_lib, self.ang_lib, self.dih_lib = \
 #                        read_ff(self.topfile,ff=ff)
-            self.assign_fftypes()        
-        
+            self.assign_fftypes()
+
     def read_top(self, fname, ff = 'amber99sb'):
         if not hasattr(fname,"readlines"):
             lines = open(fname).readlines()
@@ -461,7 +461,7 @@ class Topology:
         if not self.is_itp:
             self.read_system(lines)
             self.read_molecules(lines)
-        
+
     def assign_forcefield_parameters(self, eval_cpp = True):
         if eval_cpp:
             proc = cpp.PreProcessor()
@@ -470,14 +470,14 @@ class Topology:
             for d in self.dihedrals:
                 if len(d) == 6:
                     if not hasattr(d[5],"append"):
-                        if self.cpp_dic.has_key(d[5]):
+                        if d[5] in self.cpp_dic:
                             d[5] = [float(x) for x in self.cpp_dic[d[5]].split()]
                 elif len(d) == 7:
                     if not hasattr(d[5],"append"):
-                        if self.cpp_dic.has_key(d[5]):
+                        if d[5] in self.cpp_dic:
                             d[5] = [float(x) for x in self.cpp_dic[d[5]].split()]
                     if not hasattr(d[6],"append"):
-                        if self.cpp_dic.has_key(d[6]):
+                        if d[6] in self.cpp_dic:
                             d[6] = [float(x) for x in self.cpp_dic[d[6]].split()]
         self.make_bond_params()
         self.make_angle_params()
@@ -505,7 +505,7 @@ class Topology:
         else:
             atomlist = self.atoms
         for atom in atomlist:
-            atom.atomtypeB = atom.atomtype 
+            atom.atomtypeB = atom.atomtype
             atom.mB = atom.m
             atom.qB = atom.q
 
@@ -556,8 +556,8 @@ class Topology:
         lst = readSection(lines,'[ system ]','[')
         self.system = lst[0].strip()
 
-        
-        
+
+
     def read_atoms(self,lines):
         lst = readSection(lines,'[ atoms ]','[')
         self.atoms = []
@@ -586,14 +586,14 @@ class Topology:
                 lB = float(entries[5])
                 kB = float(entries[6])
                 self.bonds.append([self.atoms[idx[0]-1], self.atoms[idx[1]-1], idx[2], [lA,kA],[lB,kB]])
-            
+
     def read_pairs(self,lines):
         lst = readSection(lines,'[ pairs ]','[')
         self.pairs = []
         for line in lst:
             idx = [int(x) for x in line.split()]
             self.pairs.append([self.atoms[idx[0]-1], self.atoms[idx[1]-1], idx[2]])
-        
+
     def read_constraints(self,lines):
         lst = readSection(lines,'[ constraints ]','[')
         self.constraints = []
@@ -602,7 +602,7 @@ class Topology:
             self.constraints.append([self.atoms[idx[0]-1], self.atoms[idx[1]-1], idx[2]])
         if self.constraints:
             self.have_constraints = True
-            
+
     def read_angles(self, lines):
         lst = readSection(lines,'[ angles ]','[')
         angles = []
@@ -626,7 +626,7 @@ class Topology:
                 kB = float(entries[7])
                 self.angles.append([self.atoms[idx[0]-1], self.atoms[idx[1]-1], \
                                     self.atoms[idx[2]-1], idx[3], [lA,kA],[lB,kB]])
-                
+
     def read_dihedrals(self, lines):
         starts = []
         dih = []
@@ -638,7 +638,7 @@ class Topology:
             for line in lst:
                 entr = line.split()
                 idx = [int(x) for x in entr[:4]]
-                
+
                 func = int(entr[4])
                 try:
                     rest = ' '.join(entr[5:])
@@ -662,7 +662,7 @@ class Topology:
             for line in lst:
                 entr = line.split()
                 idx = [int(x) for x in entr[:4]]
-                
+
                 func = int(entr[4])
                 try:
                     rest = ' '.join(entr[5:])
@@ -687,7 +687,7 @@ class Topology:
             for line in lst:
                 entr = line.split()
                 idx = [int(x) for x in entr[:5]]
-                
+
                 func = int(entr[5])
                 try:
                     rest = ' '.join(entr[6:])
@@ -723,7 +723,7 @@ class Topology:
         l = readSection(lines,'[ moleculetype ]','[')
         if l:
             self.name, self.nexcl =  l[0].split()[0], int(l[0].split()[1])
-        
+
     def set_molecule(self, molname, n):
         mol_exists = False
         for i, mol in enumerate(self.molecules):
@@ -732,7 +732,7 @@ class Topology:
                 mol_exists = True
         if not mol_exists:
             self.molecules.append([molname,n])
-            
+
     def del_molecule(self, molname):
         if not hasattr(molname,"append"):
             molname = [molname]
@@ -741,7 +741,7 @@ class Topology:
             if m[0] not in molname:
                 new.append(m)
         self.molecules = new
-        
+
     def write_top(self, outfile, stateBonded = 'AB', stateTypes = 'AB', stateQ = 'AB',
                   scale_mass = False, dummy_qA = 'on', dummy_qB = 'on', target_qB = [],
                   full_morphe = True):
@@ -769,19 +769,19 @@ class Topology:
             self.write_system(fp)
             self.write_molecules(fp)
         fp.close()
-        
+
     def write_header(self,fp):
         for line in self.header:
-            print >>fp, line
+            print(line, file=fp)
 
     def write_footer(self,fp):
         for line in self.footer:
-            print >>fp, line
+            print(line, file=fp)
 
         def write_moleculetype(self, fp):
-            print >>fp, '[ moleculetype ]'
-            print >>fp, '; Name        nrexcl'
-            print >>fp, '%s  %d' % (self.name,self.nrexcl)
+            print('[ moleculetype ]', file=fp)
+            print('; Name        nrexcl', file=fp)
+            print('%s  %d' % (self.name,self.nrexcl), file=fp)
 
     def __atoms_morphe( self, atoms ):
         for atom in atoms:
@@ -792,11 +792,11 @@ class Topology:
         for atom in atoms:
             if atom.atomtypeB is not None and atom.atomtype != atom.atomtypeB: return True
         return False
-    
+
     def __is_perturbed_residue( self, residue ):
         if self.__atoms_morphe(residue.atoms): return True
         return False
-        
+
     def __last_perturbed_atom(self, r):
 
         max_order = 0
@@ -806,7 +806,7 @@ class Topology:
                 if not atom.atomtype.startswith('DUM') and not atom.atomtypeB.startswith('DUM'):
                     last_atom = atom
         if last_atom == None:
-            print >>sys.stderr, 'Error: Could not find a perturbed atom to put rest charges on !'
+            print('Error: Could not find a perturbed atom to put rest charges on !', file=sys.stderr)
             sys.exit(1)
         return last_atom
 
@@ -814,7 +814,7 @@ class Topology:
         for d in self.dihedrals:
             A, B = self.check_case( d[:4] )
             if ('D' not in A and 'D' in B) or ('D' in A and 'D' not in B):
-                print d[0].name, d[1].name, d[2].name, d[3].name, d[4:], A, B
+                print(d[0].name, d[1].name, d[2].name, d[3].name, d[4:], A, B)
 
     def write_atoms(self, fp, charges = 'AB', atomtypes = 'AB', dummy_qA = 'on',\
                 dummy_qB = 'on',  scale_mass=True, target_qB = [], full_morphe = True):
@@ -824,7 +824,7 @@ class Topology:
         for r in self.residues:
             if self.__is_perturbed_residue(r):
                 target_chargeB = target_qB.pop(0)
-                print 'Making target charge %g for residue %s' % (round(target_chargeB,5), r.resname)
+                print('Making target charge %g for residue %s' % (round(target_chargeB,5), r.resname))
                 for atom in r.atoms:
                     if self.__atoms_morphe([atom]):
                         if charges == 'AB':      # we move the charges from state A to state B
@@ -865,24 +865,24 @@ class Topology:
                     else:
                         atom.qqA = atom.q
                         atom.qqB = atom.q
-                qA_tot = sum(map(lambda a: a.qqA, r.atoms))
-                qB_tot = sum(map(lambda a: a.qqB, r.atoms))
+                qA_tot = sum([a.qqA for a in r.atoms])
+                qB_tot = sum([a.qqB for a in r.atoms])
                 if qB_tot != target_chargeB:
-                    print 'State B has total charge of %g' % round(qB_tot,5)
-                    print 'Applying charge correction to ensure integer charges'
+                    print('State B has total charge of %g' % round(qB_tot,5))
+                    print('Applying charge correction to ensure integer charges')
                     latom = self.__last_perturbed_atom(r)
-                    print 'Selecting atom %d-%s (%s) as perturbed atom with highest order' % (latom.id,latom.name, latom.resname)
+                    print('Selecting atom %d-%s (%s) as perturbed atom with highest order' % (latom.id,latom.name, latom.resname))
                     newqB = latom.qqB-(qB_tot-target_chargeB)
-                    print 'Changing chargeB of atom %s from %g to %g' % (latom.name, latom.qqB,newqB)
+                    print('Changing chargeB of atom %s from %g to %g' % (latom.name, latom.qqB,newqB))
                     latom.qqB = newqB
-                    qB_tot = sum(map(lambda a: a.qqB, r.atoms))
-                    print 'New total charge of B-state is %g' % round(qB_tot,5)
+                    qB_tot = sum([a.qqB for a in r.atoms])
+                    print('New total charge of B-state is %g' % round(qB_tot,5))
                 else:
-                    print 'No corrections applied to ensure integer charges'
+                    print('No corrections applied to ensure integer charges')
 
 
-        print >>fp,'\n [ atoms ]'
-        print >>fp, ';   nr       type  resnr residue  atom   cgnr     charge       mass  typeB    chargeB      massB'
+        print('\n [ atoms ]', file=fp)
+        print(';   nr       type  resnr residue  atom   cgnr     charge       mass  typeB    chargeB      massB', file=fp)
         al = self.atoms
         for atom in al:
             if self.__atoms_morphe([atom]):
@@ -916,15 +916,15 @@ class Topology:
                 else:
                     qqA = atom.q
                     qqB = atom.qB
-                print >>fp , '%6d%11s%7d%7s%7s%7d%11.6f%11.4f%11s%11.6f%11.4f' % \
+                print('%6d%11s%7d%7s%7s%7d%11.6f%11.4f%11s%11.6f%11.4f' % \
                       (atom.id, atA, atom.resnr, atom.resname, atom.name, \
-                       atom.cgnr, qqA, mA, atB, qqB, mB)
+                       atom.cgnr, qqA, mA, atB, qqB, mB), file=fp)
                 self.qA+=qqA
                 self.qB+=qqB
             else:
-                print >>fp , '%6d%11s%7d%7s%7s%7d%11.6f%11.4f' % \
+                print('%6d%11s%7d%7s%7s%7d%11.6f%11.4f' % \
                       (atom.id, atom.atomtype, atom.resnr, atom.resname, atom.name, \
-                       atom.cgnr, atom.q, atom.m)
+                       atom.cgnr, atom.q, atom.m), file=fp)
                 self.qA+=atom.q
                 self.qB+=atom.q
         # write qB of latom to qA
@@ -950,80 +950,80 @@ class Topology:
 
     def write_bonds(self,fp, state = 'AB'):
 
-        print >>fp,'\n [ bonds ]'
-        print >>fp, ';  ai    aj funct            c0            c1            c2            c3'
+        print('\n [ bonds ]', file=fp)
+        print(';  ai    aj funct            c0            c1            c2            c3', file=fp)
         for b in self.bonds:
             if len(b) == 3:
-                print >>fp, '%6d %6d %6d' % (b[0].id, b[1].id, b[2])
+                print('%6d %6d %6d' % (b[0].id, b[1].id, b[2]), file=fp)
             elif len(b) == 4:
                 s = '   '+'   '.join([str(x) for x in b[3]])
-                print >>fp, '%6d %6d %6d %s' % (b[0].id, b[1].id, b[2], s)
+                print('%6d %6d %6d %s' % (b[0].id, b[1].id, b[2], s), file=fp)
             else:
                 lA = b[3][1]
                 kA = b[3][2]
                 lB = b[4][1]
                 kB = b[4][2]
                 if state == 'AB':
-                    print >>fp, '%6d %6d %6d %14.6f %14.6f %14.6f %14.6f' % \
-                          (b[0].id, b[1].id, b[2],lA,kA, lB, kB)
+                    print('%6d %6d %6d %14.6f %14.6f %14.6f %14.6f' % \
+                          (b[0].id, b[1].id, b[2],lA,kA, lB, kB), file=fp)
                 elif state == 'AA':
-                    print >>fp, '%6d %6d %6d %14.6f %14.6f %14.6f %14.6f' % \
-                          (b[0].id, b[1].id, b[2],lA, kA, lA, kA)
+                    print('%6d %6d %6d %14.6f %14.6f %14.6f %14.6f' % \
+                          (b[0].id, b[1].id, b[2],lA, kA, lA, kA), file=fp)
                 elif state == 'BB':
-                    print >>fp, '%6d %6d %6d %14.6f %14.6f %14.6f %14.6f' % \
-                          (b[0].id, b[1].id, b[2],lB, kB, lB, kB)
+                    print('%6d %6d %6d %14.6f %14.6f %14.6f %14.6f' % \
+                          (b[0].id, b[1].id, b[2],lB, kB, lB, kB), file=fp)
 
 
     def write_pairs(self, fp):
         # CHECK HOW THIS GOES WITH B-STATES
-        print >>fp,'\n [ pairs ]'
-        print >>fp, ';  ai    aj funct            c0            c1            c2            c3'
+        print('\n [ pairs ]', file=fp)
+        print(';  ai    aj funct            c0            c1            c2            c3', file=fp)
         for p in self.pairs:
-            print >>fp, '%6d %6d %6d' % (p[0].id, p[1].id, p[2])
+            print('%6d %6d %6d' % (p[0].id, p[1].id, p[2]), file=fp)
 
     def write_constraints(self, fp):
         # CHECK HOW THIS GOES WITH B-STATES
-        print >>fp,'\n [ constraints ]'
-        print >>fp, ';  ai    aj funct            c0            c1            c2            c3'
+        print('\n [ constraints ]', file=fp)
+        print(';  ai    aj funct            c0            c1            c2            c3', file=fp)
         for p in self.constraints:
-            print >>fp, '%6d %6d %6d' % (p[0].id, p[1].id, p[2])
+            print('%6d %6d %6d' % (p[0].id, p[1].id, p[2]), file=fp)
 
     def write_angles(self,fp, state='AB'):
-        print >>fp,'\n [ angles ]'    
-        print >>fp, ';  ai    aj    ak funct            c0            c1            c2            c3'
+        print('\n [ angles ]', file=fp)
+        print(';  ai    aj    ak funct            c0            c1            c2            c3', file=fp)
         for ang in self.angles:
             if len(ang) == 4:
-                print >>fp, '%6d %6d %6d %6d' % (ang[0].id, ang[1].id, ang[2].id,ang[3])
+                print('%6d %6d %6d %6d' % (ang[0].id, ang[1].id, ang[2].id,ang[3]), file=fp)
             else:
                 if state == 'AB':
-                    print >>fp, '%6d %6d %6d %6d %14.6f %14.6f %14.6f %14.6f ; %s %s %s' % \
+                    print('%6d %6d %6d %6d %14.6f %14.6f %14.6f %14.6f ; %s %s %s' % \
                           (ang[0].id, ang[1].id, ang[2].id,ang[3], ang[4][1], \
-                           ang[4][2], ang[5][1], ang[5][2], ang[0].name, ang[1].name, ang[2].name)
+                           ang[4][2], ang[5][1], ang[5][2], ang[0].name, ang[1].name, ang[2].name), file=fp)
                 elif state == 'AA':
-                    print >>fp, '%6d %6d %6d %6d %14.6f %14.6f %14.6f %14.6f ; %s %s %s' % \
+                    print('%6d %6d %6d %6d %14.6f %14.6f %14.6f %14.6f ; %s %s %s' % \
                           (ang[0].id, ang[1].id, ang[2].id,ang[3], ang[4][1], \
-                           ang[4][2], ang[4][1], ang[4][2], ang[0].name, ang[1].name, ang[2].name)
+                           ang[4][2], ang[4][1], ang[4][2], ang[0].name, ang[1].name, ang[2].name), file=fp)
                 elif state == 'BB':
-                    print >>fp, '%6d %6d %6d %6d %14.6f %14.6f %14.6f %14.6f ; %s %s %s' % \
+                    print('%6d %6d %6d %6d %14.6f %14.6f %14.6f %14.6f ; %s %s %s' % \
                           (ang[0].id, ang[1].id, ang[2].id,ang[3], ang[5][1], \
-                           ang[5][2], ang[5][1], ang[5][2], ang[0].name, ang[1].name, ang[2].name)
+                           ang[5][2], ang[5][1], ang[5][2], ang[0].name, ang[1].name, ang[2].name), file=fp)
 
 
     def write_dihedrals(self, fp, state='AB'):
-        print >>fp,'\n [ dihedrals ]'    
-        print >>fp,';  ai    aj    ak    al funct            c0            c1            c2            c3            c4            c5'
+        print('\n [ dihedrals ]', file=fp)
+        print(';  ai    aj    ak    al funct            c0            c1            c2            c3            c4            c5', file=fp)
         for d in self.dihedrals:
             if len(d) == 5:
-                print >>fp, "%6d %6d %6d %6d %4d" % ( d[0].id, d[1].id, d[2].id, d[3].id, d[4])
+                print("%6d %6d %6d %6d %4d" % ( d[0].id, d[1].id, d[2].id, d[3].id, d[4]), file=fp)
             elif len(d) == 6:
-                print >>fp, "%6d %6d %6d %6d %4d %s" % ( d[0].id, d[1].id, d[2].id, d[3].id, d[4], d[5])
+                print("%6d %6d %6d %6d %4d %s" % ( d[0].id, d[1].id, d[2].id, d[3].id, d[4], d[5]), file=fp)
             elif len(d) == 7:
                 A, B = self.check_case(d[:4])
                 ast = d[5]
                 bs = d[6]
                 if ast == None or bs == None:
-                    print d[0].name, d[1].name, d[2].name, d[3].name, d[0].atomtype, d[1].atomtype, d[2].atomtype, d[3].atomtype, d[0].atomtypeB, d[1].atomtypeB, d[2].atomtypeB, d[3].atomtypeB
-                    print d[0].type, d[1].type, d[2].type, d[3].type, d[0].typeB, d[1].typeB, d[2].typeB, d[3].typeB
+                    print(d[0].name, d[1].name, d[2].name, d[3].name, d[0].atomtype, d[1].atomtype, d[2].atomtype, d[3].atomtype, d[0].atomtypeB, d[1].atomtypeB, d[2].atomtypeB, d[3].atomtypeB)
+                    print(d[0].type, d[1].type, d[2].type, d[3].type, d[0].typeB, d[1].typeB, d[2].typeB, d[3].typeB)
                 if ast == 'NULL':
                     if d[4] == 3: # Ryckaert-Bellemans
                         ast = ' '.join(["%g" % x for x in [0,0,0,0,0,0]])
@@ -1033,72 +1033,72 @@ class Topology:
                     ast = ' '.join(["%g" % x for x in d[5][1:]])
                 if bs == 'NULL':
                     if d[4] == 3:
-                        bs = ' '.join(["%g" % x for x in [0,0,0,0,0,0]]) 
+                        bs = ' '.join(["%g" % x for x in [0,0,0,0,0,0]])
                     elif d[4] == 1:
                         bs = ' '.join(["%g" % x for x in [0,0,0]])
                 elif bs !='NULL' and hasattr(bs,"append"):
                     bs = ' '.join(["%g" % x for x in d[6][1:]])
                 if state == 'AB':
-                    print >>fp, "%6d %6d %6d %6d %4d %s %s ; %s %s %s %s %s %s %s %s (%s->%s)" % \
+                    print("%6d %6d %6d %6d %4d %s %s ; %s %s %s %s %s %s %s %s (%s->%s)" % \
                           ( d[0].id, d[1].id, d[2].id, d[3].id, d[4], ast, bs, d[0].name,d[1].name,d[2].name,d[3].name, \
-                            d[0].type,d[1].type,d[2].type,d[3].type,A,B)
+                            d[0].type,d[1].type,d[2].type,d[3].type,A,B), file=fp)
                 elif state == 'AA':
-                    print >>fp, "%6d %6d %6d %6d %4d %s %s ; %s %s %s %s %s %s %s %s (%s->%s)" % \
+                    print("%6d %6d %6d %6d %4d %s %s ; %s %s %s %s %s %s %s %s (%s->%s)" % \
                           ( d[0].id, d[1].id, d[2].id, d[3].id, d[4], ast, ast, d[0].name,d[1].name,d[2].name,d[3].name, \
-                            d[0].type,d[1].type,d[2].type,d[3].type, A,B)
+                            d[0].type,d[1].type,d[2].type,d[3].type, A,B), file=fp)
                 elif state == 'BB':
-                    print >>fp, "%6d %6d %6d %6d %4d %s %s ; %s %s %s %s %s %s %s %s (%s->%s)" % \
+                    print("%6d %6d %6d %6d %4d %s %s ; %s %s %s %s %s %s %s %s (%s->%s)" % \
                           ( d[0].id, d[1].id, d[2].id, d[3].id, d[4], bs, bs, d[0].name,d[1].name,d[2].name,d[3].name, \
-                            d[0].type,d[1].type,d[2].type,d[3].type, A,B)
+                            d[0].type,d[1].type,d[2].type,d[3].type, A,B), file=fp)
 
 
     def check_case(self, atoms):
-            A = ''
-            B = ''
-            for a in atoms:
-                if a.atomtype.startswith('DUM'): A += 'D'
-                else: A += 'A'
-                if a.atomtypeB is not None:
-                    if a.atomtypeB.startswith('DUM'): B += 'D'
-                    else: B += 'A'
+        A = ''
+        B = ''
+        for a in atoms:
+            if a.atomtype.startswith('DUM'): A += 'D'
+            else: A += 'A'
+            if a.atomtypeB is not None:
+                if a.atomtypeB.startswith('DUM'): B += 'D'
                 else: B += 'A'
-            return A, B
+            else: B += 'A'
+        return A, B
 
 
 
 
     def write_vsites3(self, fp):
-        print >>fp,'\n [ virtual_sites3 ]'    
-        print >>fp,';  ai    aj    ak    al funct            c0            c1'
+        print('\n [ virtual_sites3 ]', file=fp)
+        print(';  ai    aj    ak    al funct            c0            c1', file=fp)
         for vs in self.virtual_sites3:
             if len(vs) == 6:
-                print >>fp, "%6d %6d %6d %6d %4d" % ( vs[0].id, vs[1].id, vs[2].id, vs[3].id, vs[4])
+                print("%6d %6d %6d %6d %4d" % ( vs[0].id, vs[1].id, vs[2].id, vs[3].id, vs[4]), file=fp)
             else:
                 sys.stderr.write('EEK! Something went wrong while writing virtual_sites3!!!!\n')
-                print vs
+                print(vs)
                 sys.exit(1)
 
     def write_vsites4(self, fp):
-        print >>fp,'\n [ virtual_sites4 ]'    
-        print >>fp,';  ai    aj    ak    al    am  funct            c0            c1          c2'
+        print('\n [ virtual_sites4 ]', file=fp)
+        print(';  ai    aj    ak    al    am  funct            c0            c1          c2', file=fp)
         for vs in self.virtual_sites4:
             if len(vs) == 7:
-                print >>fp, "%6d %6d %6d %6d %6d %4d" % ( vs[0].id, vs[1].id, vs[2].id, vs[3].id, vs[4].id, vs[5])
+                print("%6d %6d %6d %6d %6d %4d" % ( vs[0].id, vs[1].id, vs[2].id, vs[3].id, vs[4].id, vs[5]), file=fp)
             else:
                 sys.stderr.write('EEK! Something went wrong while writing virtual_sites4!!!!\n')
-                print vs
+                print(vs)
                 sys.exit(1)
 
 
     def write_system(self,fp):
-        print >>fp, '[ system ]'
-        print >>fp, self.system
+        print('[ system ]', file=fp)
+        print(self.system, file=fp)
 
     def write_molecules(self,fp):
-        print >>fp, '[ molecules ]'
+        print('[ molecules ]', file=fp)
         for mol, num in self.molecules:
-            print >>fp, "%s %d" % (mol,num)
-            
+            print("%s %d" % (mol,num), file=fp)
+
     def assign_fftypes(self):
         for atom in self.atoms:
             atom.type = self.NBParams.atomtypes[atom.atomtype]['bond_type']
@@ -1106,13 +1106,13 @@ class Topology:
                 atom.typeB = self.NBParams.atomtypes[atom.atomtypeB]['bond_type']
             else:
                 atom.typeB = atom.type
-            
+
     def make_bond_params(self):
         for i, (at1,at2,func) in enumerate(self.bonds):
             param = get_bond_param(at1.type,at2.type,self.bond_lib)
             if param is None:
-                print 'Error! No bonded parameters found! (%s-%s)' % \
-                      (at1.type, at2.type)
+                print('Error! No bonded parameters found! (%s-%s)' % \
+                      (at1.type, at2.type))
                 sys.exit(1)
             self.bonds[i].append(param[1:])
 
@@ -1120,11 +1120,11 @@ class Topology:
         for i, (at1, at2, at3, func) in enumerate(self.angles):
             param = get_angle_param(at1.type, at2.type, at3.type, self.ang_lib)
             if param is None:
-                print 'Error! No angle parameters found! (%s-%s-%s)' % \
-                      (at1.type, at2.type, at3.type)
+                print('Error! No angle parameters found! (%s-%s-%s)' % \
+                      (at1.type, at2.type, at3.type))
                 sys.exit(1)
             self.angles[i].append(param[1:])
-            
+
     def make_dihedral_params(self):
         for i, d in enumerate(self.dihedrals):
             if d[5]!='': # we have a prefefined dihedral
@@ -1135,14 +1135,14 @@ class Topology:
                                            at3.type, at4.type, \
                                            self.dih_lib, func)
                 if param is None:
-                    print 'Error! No dihedral parameters found! (%s-%s-%s-%s)' % \
-                          (at1.type, at2.type, at3.type, at4.type)
-                    print func, dih
+                    print('Error! No dihedral parameters found! (%s-%s-%s-%s)' % \
+                          (at1.type, at2.type, at3.type, at4.type))
+                    print(func, dih)
                     sys.exit(1)
                 del self.dihedrals[i][-1]
                 self.dihedrals[i].append(param[1:])
-                
-                
+
+
 
 
 def cpp_parse_file(fn,cpp_defs=[],cpp_path=[os.environ.get('GMXLIB')] ):
@@ -1259,13 +1259,13 @@ def __get_rtp_entry( key, lines ):
         else:
             r.append(line)
     return r
-    
+
 def __read_rtp_atoms(resname, lines ):
     atoms = []
     for line in lines:
         entr = line.split()
-        if _aliases.has_key( resname ) :
-            if _aliases[resname].has_key(entr[0]):
+        if resname in _aliases :
+            if entr[0] in _aliases[resname]:
                 entr[0] = _aliases[resname][entr[0]]
         entr[2] = float(entr[2])
         entr[3] = int(entr[3])
@@ -1277,12 +1277,12 @@ def __read_rtp_bonds( resname, lines ):
     for line in lines:
         entr = line.split()
         if entr[0] not in ['+','-']:
-            if _aliases.has_key( resname ) :
-                if _aliases[resname].has_key(entr[0]):
+            if resname in _aliases :
+                if entr[0] in _aliases[resname]:
                     entr[0] = _aliases[resname][entr[0]]
         if entr[1] not in ['+','-']:
-            if _aliases.has_key( resname ) :
-                if _aliases[resname].has_key(entr[1]):
+            if resname in _aliases :
+                if entr[1] in _aliases[resname]:
                     entr[1] = _aliases[resname][entr[1]]
         bonds.append(entr)
     return bonds
@@ -1292,20 +1292,20 @@ def __read_rtp_dihedrals( resname, lines ):
     for line in lines:
         entr = line.split()
         if entr[0] not in ['+','-']:
-            if _aliases.has_key( resname ) :
-                if _aliases[resname].has_key(entr[0]):
+            if resname in _aliases :
+                if entr[0] in _aliases[resname]:
                     entr[0] = _aliases[resname][entr[0]]
         if entr[1] not in ['+','-']:
-            if _aliases.has_key( resname ) :
-                if _aliases[resname].has_key(entr[1]):
+            if resname in _aliases :
+                if entr[1] in _aliases[resname]:
                     entr[1] = _aliases[resname][entr[1]]
         if entr[2] not in ['+','-']:
-            if _aliases.has_key( resname ) :
-                if _aliases[resname].has_key(entr[2]):
+            if resname in _aliases :
+                if entr[2] in _aliases[resname]:
                     entr[2] = _aliases[resname][entr[2]]
         if entr[3] not in ['+','-']:
-            if _aliases.has_key( resname ) :
-                if _aliases[resname].has_key(entr[3]):
+            if resname in _aliases :
+                if entr[3] in _aliases[resname]:
                     entr[3] = _aliases[resname][entr[3]]
         if len(entr) == 5:
             diheds.append(entr)
@@ -1318,20 +1318,20 @@ def __read_rtp_impropers( resname, lines ):
     for line in lines:
         entr = line.split()
         if entr[0] not in ['+','-']:
-            if _aliases.has_key( resname ) :
-                if _aliases[resname].has_key(entr[0]):
+            if resname in _aliases :
+                if entr[0] in _aliases[resname]:
                     entr[0] = _aliases[resname][entr[0]]
         if entr[1] not in ['+','-']:
-            if _aliases.has_key( resname ) :
-                if _aliases[resname].has_key(entr[1]):
+            if resname in _aliases :
+                if entr[1] in _aliases[resname]:
                     entr[1] = _aliases[resname][entr[1]]
         if entr[2] not in ['+','-']:
-            if _aliases.has_key( resname ) :
-                if _aliases[resname].has_key(entr[2]):
+            if resname in _aliases :
+                if entr[2] in _aliases[resname]:
                     entr[2] = _aliases[resname][entr[2]]
         if entr[3] not in ['+','-']:
-            if _aliases.has_key( resname ) :
-                if _aliases[resname].has_key(entr[3]):
+            if resname in _aliases :
+                if entr[3] in _aliases[resname]:
                     entr[3] = _aliases[resname][entr[3]]
         if len(entr) == 5:
             improps.append(entr)
@@ -1368,7 +1368,7 @@ def read_rtp( filename ):
             }
     sys.stderr.write('\ndone...\n' )
     return rtp_entries
-        
+
 
 
 def get_rtp_entry(key, filename = 'ffamber99sb.rtp'):
@@ -1379,8 +1379,8 @@ def get_rtp_entry(key, filename = 'ffamber99sb.rtp'):
     idx = 0
     for line in lines:
         if line.strip()[1:-1].strip() == key:
-           idx = lines.index(line)
-           break
+            idx = lines.index(line)
+            break
     for line in lines[idx+1:]:
         if line.strip().startswith('['):
             if line.strip()[1:-1].strip() not in \
@@ -1458,20 +1458,20 @@ def read_itp_atoms(lines):
     return al
 
 def write_itp_atoms(fp,al):
-    print >>fp, '[ atoms ]'
-    print >>fp,'; nr       type  resnr residue  atom   cgnr     charge       mass  typeB    chargeB'
+    print('[ atoms ]', file=fp)
+    print('; nr       type  resnr residue  atom   cgnr     charge       mass  typeB    chargeB', file=fp)
     for atom in al:
         if atom.atomtypeB is not None:
-             print >>fp , '%6d %11s %7d%7s%7s%7d%11.6f%11.4f %11s%11.6f%11.4f' % \
-                  (atom.id, atom.atomtype, atom.resnr, atom.resname, atom.name, \
-                   atom.cgnr, atom.q, atom.m, atom.atomtypeB, atom.qB, atom.mB)
+            print('%6d %11s %7d%7s%7s%7d%11.6f%11.4f %11s%11.6f%11.4f' % \
+                 (atom.id, atom.atomtype, atom.resnr, atom.resname, atom.name, \
+                  atom.cgnr, atom.q, atom.m, atom.atomtypeB, atom.qB, atom.mB), file=fp)
         else:
-            print >>fp , '%6d %11s %7d%7s%7s%7d%11.6f%11.4f' % \
+            print('%6d %11s %7d%7s%7s%7d%11.6f%11.4f' % \
                   (atom.id, atom.atomtype, atom.resnr, atom.resname, atom.name, \
-                   atom.cgnr, atom.q, atom.m)
+                   atom.cgnr, atom.q, atom.m), file=fp)
 
 def write_itp_bonds(fp,bonds):
-    print >>fp, '[ bonds ]'
+    print('[ bonds ]', file=fp)
     for b in bonds:
         if isinstance(b[0],Atom):
             tmp = [b[0].id, b[1].id]+b[2:]
@@ -1485,10 +1485,10 @@ def write_itp_bonds(fp,bonds):
                 out += form % item
             elif len(item) > 0:
                 out += "%6s " % item
-        print >>fp, out
+        print(out, file=fp)
 
 def write_itp_pairs(fp,pairs):
-    print >>fp, '[ pairs ]'
+    print('[ pairs ]', file=fp)
     for p in pairs:
         if isinstance(p[0],Atom):
             tmp = [p[0].id, p[1].id]+p[2:]
@@ -1502,10 +1502,10 @@ def write_itp_pairs(fp,pairs):
                 out += form % item
             elif len(item) > 0:
                 out += "%6s " % item
-        print >>fp, out
+        print(out, file=fp)
 
 def write_itp_angles(fp,angles):
-    print >>fp, '[ angles ]'
+    print('[ angles ]', file=fp)
     for a in angles:
         if isinstance(a[0],Atom):
             tmp = [a[0].id, a[1].id, a[2].id]+a[3:]
@@ -1519,11 +1519,11 @@ def write_itp_angles(fp,angles):
                 out += form % item
             elif len(item) > 0:
                 out += "%6s " % item
-        print >>fp, out
+        print(out, file=fp)
 
 
 def write_itp_dihedrals(fp,dihedrals):
-    print >>fp, '[ dihedrals ]'
+    print('[ dihedrals ]', file=fp)
     for d in dihedrals:
         if isinstance(d[0],Atom):
             tmp = [d[0].id, d[1].id, d[2].id, d[3].id]+d[4:]
@@ -1537,14 +1537,14 @@ def write_itp_dihedrals(fp,dihedrals):
                 out += form % item
             elif len(item) > 0:
                 out += "%6s " % item
-        print >>fp, out
+        print(out, file=fp)
 
 
 def write_itp_moleculetype(fp,name,nrexcl):
-    print >>fp, '[ moleculetype ]'
-    print >>fp, '; Name        nrexcl'
-    print >>fp, '%s  %d' % (name,nrexcl)
-    
+    print('[ moleculetype ]', file=fp)
+    print('; Name        nrexcl', file=fp)
+    print('%s  %d' % (name,nrexcl), file=fp)
+
 def read_itp_bonds(lines):
     lst = readSection(lines,'[ bonds ]','[')
     bonds = []
@@ -1630,14 +1630,14 @@ def read_gaff_top(fname):
 #    atypes = read_atomtypes(lines, ff = 'amber03')
 #    itp.atomtypes = atypes
     return itp
-    
+
 class MDPError(Exception):
     def __init__(self, s):
         self.s = s
     def __str__(self):
         return repr(self.s)
 
-    
+
 class MDP:
 
     def __init__(self, fn = None):
@@ -1678,7 +1678,7 @@ class MDP:
         ['pbc'                      , 'xyz'],
         ['periodic_molecules'       , 'no'],
         ['rlist'                    , 1.2],
-	['cutoff-scheme'	    , 'verlet'],
+        ['cutoff-scheme'            , 'verlet'],
         ['coulombtype'              , 'PME'],
         ['rcoulomb-switch'          , 0],
         ['rcoulomb'                 , 1.1],
@@ -1770,7 +1770,7 @@ class MDP:
         ['sc-alpha'                 , 0.3],
         ['sc-power'                 , 1],
         ['sc-sigma'                 , 0.25],
-	['sc-coul'		    , 'yes'],
+        ['sc-coul'                  , 'yes'],
         ['couple-moltype'           ,''],
         ['couple-lambda0'           , 'vdw-q'],
         ['couple-lambda1'           , 'vdw-q'],
@@ -1798,13 +1798,13 @@ class MDP:
         ['userreal3'                , 0],
         ['userreal4'                , 0]
         ])
-        
+
         if fn:
             self.read(fn)
 
     def __str__(self):
         line = ''
-        for key, val in self.parameters.items():
+        for key, val in list(self.parameters.items()):
             if hasattr(val,"append"):
                 s = ''
                 for x in val:
@@ -1813,17 +1813,17 @@ class MDP:
                 s = str(val)
             line+="%-25s = %s\n" % (key, s)
         return line
-            
+
     def __setitem__(self,item,value):
-        if not self.parameters.has_key(item):
-            raise MDPError, "No such option %s" % item
-        
+        if item not in self.parameters:
+            raise MDPError("No such option %s" % item)
+
         self.parameters[item] = value
 
     def __getitem__(self, item):
         return self.parameters[item]
 
-        
+
     def write(self, fp = None):
 
         if fp is None:
@@ -1831,7 +1831,7 @@ class MDP:
         else:
             if not hasattr(fp,"write"):
                 fp = open(fp,"w")
-        print >>fp, self
+        print(self, file=fp)
 
     def read(self, filename):
         lines = open(filename).readlines()
@@ -1840,7 +1840,7 @@ class MDP:
             entr = line.split('=')
             key = entr[0].strip()
             val = entr[1].strip().split()
-            if not self.parameters.has_key(key):
+            if key not in self.parameters:
                 self.parameters[key] = val
 #                print 'Warning! Ignoring entry \'%s\'' % key
             else:
@@ -1878,7 +1878,7 @@ def make_amber_residue_names(model):
                 res.set_resname(rr)
             else:
                 res.set_resname('CYM')
-            
+
         else:
             res.set_resname('CYN')
     lysl = model.fetch_residues('LYS')
@@ -1937,7 +1937,7 @@ def make_amber_residue_names(model):
                     o1.name = 'OC1'
                     o2.name = 'OC2'
                 except:
-                    print >>sys.stderr, 'pymacs_Warning_> No terminal oxygen atoms found in chain %s' % chain.id
+                    print('pymacs_Warning_> No terminal oxygen atoms found in chain %s' % chain.id, file=sys.stderr)
 
 
 
@@ -1946,7 +1946,7 @@ def assign_ffamber99sb_params(m):
     m.rename_atoms()
     for c in m.chains:
         c.make_residue_tree()
-        
+
     make_amber_residue_names( m)
     rtp = RTPParser('ffamber99sb.rtp')
     rtp.assign_params(m)
@@ -1955,7 +1955,7 @@ def assign_ffamber99sb_params(m):
     nb.assign_params( m )
     bo.assign_params( m )
     rtp.assign_dihedral_params( m, bo.directives )
-    
+
 
 
 def bond_energy(m):
@@ -1980,20 +1980,19 @@ def nb_energy( m ):
 
 def energy(m):
 
-    bond_ene = bond_energy( m ) 
+    bond_ene = bond_energy( m )
     angle_ene = angle_energy( m )
     dihedral_ene = dihedral_energy( m )
     improper_ene = improper_energy ( m )
     lj14_ene = lj14_energy( m )
     coul14_ene = coul14_energy( m )
     nb_ene = nb_energy( m )
-##     print 'bonds = ', bond_ene   
+##     print 'bonds = ', bond_ene
 ##     print 'angles = ',angle_ene
 ##     print 'dihedrals = ',dihedral_ene
 ##     print 'impropers = ',improper_ene
 ##     print 'nb = ',nb_ene
 ##     print 'lj14 = ',lj14_ene
 ##     print 'coul14 = ',coul14_ene
- 
-    return bond_ene + angle_ene + dihedral_ene + improper_ene + nb_ene + lj14_ene + coul14_ene
 
+    return bond_ene + angle_ene + dihedral_ene + improper_ene + nb_ene + lj14_ene + coul14_ene

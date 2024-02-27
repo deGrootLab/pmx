@@ -208,13 +208,13 @@ def check_residue_name( res ):
             res.set_resname('GLH')
     elif res.resname == 'CYS':
         if not res.has_atom('HG'):
-            print >>sys.stderr,' Cannot mutate SS-bonded Cys %d' % res.id
+            print(' Cannot mutate SS-bonded Cys %d' % res.id, file=sys.stderr)
 
 def check_OPLS_LYS( res ):
     if res.has_atom( 'HZ3'):
         return('K')
     else:
-	return('O')
+        return('O')
 
 #def get_restype(r):
 #    if r.resname in ['DA','DT','DC','DG']:
@@ -227,33 +227,33 @@ def read_script(fn):
     return read_and_format(fn,"is")
 
 def int_input():
-    inp = raw_input()
+    inp = input()
     try:
         inp = int(inp)
         return inp
     except:
-        print 'You entered "%s" -> Try again' % inp
+        print('You entered "%s" -> Try again' % inp)
         return None
 
 def check_residue_range(m, idx):
-    valid_ids = range(1, len(m.residues)+1)
+    valid_ids = list(range(1, len(m.residues)+1))
     if idx not in valid_ids: return False
     return True
 
 def select_residue(m):
-    valid_ids = range(1, len(m.residues)+1)
-    print '\nSelect residue to mutate:'
+    valid_ids = list(range(1, len(m.residues)+1))
+    print('\nSelect residue to mutate:')
     for i,r in enumerate(m.residues):
         if r.resname not in library._ions+library._water:
             sys.stdout.write('%6d-%s-%s' % (r.id,r.resname,r.chain_id))
-            if r.id % 6 == 0: print
-    print
+            if r.id % 6 == 0: print()
+    print()
     selected_residue_id = None
     while not selected_residue_id:
         sys.stdout.write('Enter residue number: ')
         selected_residue_id = int_input()
         if selected_residue_id is not None and selected_residue_id not in valid_ids:
-            print 'Residue id %d not in range %d-%d -> Try again' % (selected_residue_id,1,len(residues))
+            print('Residue id %d not in range %d-%d -> Try again' % (selected_residue_id,1,len(residues)))
             selected_residue_id = None
     return selected_residue_id
 
@@ -267,10 +267,10 @@ def select_mutation(m, selected_residue_id, ffpath):
 
 def select_nuc_mutation(residue):
     aa = None
-    print '\nSelect new base for %s-%s: ' % (residue.id,residue.resname)
+    print('\nSelect new base for %s-%s: ' % (residue.id,residue.resname))
     sys.stdout.write('One-letter code: ')
     while aa is None:
-        aa = raw_input().upper()
+        aa = input().upper()
         if get_restype(residue) == 'DNA' and aa not in ['A','C','G','T']:
             sys.stdout.write('Unknown DNA residue "%s"!\nOne-letter code: ' % aa)
             aa = None
@@ -278,12 +278,12 @@ def select_nuc_mutation(residue):
             sys.stdout.write('Unknown RNA residue "%s"!\nOne-letter code: ' % aa)
             aa = None
         if aa:
-            print 'Will apply mutation %s->%s on residue %s-%d' % (residue.resname[1],aa,residue.resname,residue.id)
+            print('Will apply mutation %s->%s on residue %s-%d' % (residue.resname[1],aa,residue.resname,residue.id))
         return aa
 
 def select_aa_mutation(residue,ffpath):
     check_residue_name( residue )
-    print '\nSelect new amino acid for %s-%s: ' % (residue.id,residue.resname)
+    print('\nSelect new amino acid for %s-%s: ' % (residue.id,residue.resname))
     sys.stdout.write('Three- or one-letter code (or four-letter for ff specific residues): ')
     if residue.resname in ['HIE','HISE','HSE']: rol = 'X'
     elif residue.resname in ['HIP','HISH','HSP']: rol = 'Z'
@@ -293,21 +293,21 @@ def select_aa_mutation(residue,ffpath):
     else:
         rol = library._one_letter[residue.resname]
     aa = None
-    ol = library._aacids_dic.keys()
-    tl = library._aacids_dic.values()
+    ol = list(library._aacids_dic.keys())
+    tl = list(library._aacids_dic.values())
     ffpathlower = ffpath.lower()
     if('amber' in ffpathlower):
-            ol = library._aacids_ext_amber.keys()
-            tl = library._aacids_ext_amber.values()
+        ol = list(library._aacids_ext_amber.keys())
+        tl = list(library._aacids_ext_amber.values())
     if('opls' in ffpathlower):
-            ol = library._aacids_ext_oplsaa.keys()
-            tl = library._aacids_ext_oplsaa.values()+['ASPP','GLUP','LSN']
+        ol = list(library._aacids_ext_oplsaa.keys())
+        tl = list(library._aacids_ext_oplsaa.values())+['ASPP','GLUP','LSN']
     if('charmm' in ffpathlower):
-            ol = library._aacids_ext_charmm.keys()
-            tl = library._aacids_ext_charmm.values()
+        ol = list(library._aacids_ext_charmm.keys())
+        tl = list(library._aacids_ext_charmm.values())
 
     while aa is None:
-        aa = raw_input().upper()
+        aa = input().upper()
         if len(aa) != 1 and len(aa)!=3 and len(aa)!=4:
             sys.stdout.write('Nope!\nThree- or one-letter code (or four-letter for ff specific residues): ')
             aa = None
@@ -315,7 +315,7 @@ def select_aa_mutation(residue,ffpath):
             sys.stdout.write('Unknown aa "%s"!\nThree- or one-letter code (or four-letter for ff specific residues): ' % aa)
             aa = None
         if aa and (len(aa)==3 or len(aa)==4): aa = ext_one_letter[aa]
-    print 'Will apply mutation %s->%s on residue %s-%d' % (rol,aa,residue.resname,residue.id)
+    print('Will apply mutation %s->%s on residue %s-%d' % (rol,aa,residue.resname,residue.id))
     return aa
 
 
@@ -326,7 +326,7 @@ def interactive_selection(m,ffpath):
 
 def ask_next():
     sys.stdout.write('\nApply another mutation [y/n]? ')
-    res = raw_input().lower()
+    res = input().lower()
     if res == 'y': return True
     elif res == 'n': return False
     else: return ask_next()
@@ -342,23 +342,23 @@ def rename_to_match_library(res):
     name_hash = {}
     atoms = res.atoms
     for atom in atoms:
-	foo = atom.name
-	## for serine
-	if (atom.resname == 'SER') and (atom.name == 'HG1'):
-	    atom.name = 'HG'
+        foo = atom.name
+        ## for serine
+        if (atom.resname == 'SER') and (atom.name == 'HG1'):
+            atom.name = 'HG'
         if ('S2' in atom.resname) and (atom.name == 'HG1'):
             atom.name = 'HG'
         if ('SP1' in atom.resname) and (atom.name == 'HG1'): # phosphoserine in charmm36
             atom.name = 'HG'
         if ('SP2' in atom.resname) and (atom.name == 'HG1'): # phosphoserine in charmm36
             atom.name = 'HG'
-	## for cysteine
+        ## for cysteine
         if (atom.resname == 'CYS') and (atom.name == 'HG1'):
             atom.name = 'HG'
         if ('C2' in atom.resname) and (atom.name == 'HG1'):
             atom.name = 'HG'
-#	print atom.resname,atom.name
-	name_hash[atom.name] = foo
+#       print atom.resname,atom.name
+        name_hash[atom.name] = foo
     return name_hash
 
 def rename_back( res, name_hash ):
@@ -368,11 +368,11 @@ def rename_back( res, name_hash ):
 def set_conformation(old_res, new_res, rotdic):
     old_res.get_real_resname()
     dihedrals = library._aa_dihedrals[old_res.real_resname]
-    for key, lst in rotdic.items():
+    for key, lst in list(rotdic.items()):
         new = new_res.fetchm(lst)
         rotdic[key] = new
     chis = []
-    for key in rotdic.keys():
+    for key in list(rotdic.keys()):
         at1,at2 = key.split('-')
         for d in dihedrals:
             if d[1] == at1 and d[2] == at2 \
@@ -398,28 +398,28 @@ def set_conformation(old_res, new_res, rotdic):
 def get_nuc_hybrid_resname(residue,new_nuc_name,bRNA=False):
     firstLetter = 'D'
     if bRNA:
-	firstLetter = 'R'
+        firstLetter = 'R'
 
     # identify if the nucleotide is terminal
     for a in residue.atoms:
-	if a.name=='H3T':
-	    r1 = firstLetter+residue.resname[1]+'3'
-	    r2 = firstLetter+new_nuc_name+'3'
-	    dict_key = r1+'_'+r2
-	    if bRNA:
-	        hybrid_residue_name = rna_names[dict_key]
-	    else:
-	        hybrid_residue_name = dna_names[dict_key]
-	    return(hybrid_residue_name,residue.resname[1],new_nuc_name)
-	elif a.name=='H5T':
-	    r1 = firstLetter+residue.resname[1]+'5'
-	    r2 = firstLetter+new_nuc_name+'5'
-	    dict_key = r1+'_'+r2
-	    if bRNA:
-	        hybrid_residue_name = rna_names[dict_key]
-	    else:
-	        hybrid_residue_name = dna_names[dict_key]
-	    return(hybrid_residue_name,residue.resname[1],new_nuc_name)
+        if a.name=='H3T':
+            r1 = firstLetter+residue.resname[1]+'3'
+            r2 = firstLetter+new_nuc_name+'3'
+            dict_key = r1+'_'+r2
+            if bRNA:
+                hybrid_residue_name = rna_names[dict_key]
+            else:
+                hybrid_residue_name = dna_names[dict_key]
+            return(hybrid_residue_name,residue.resname[1],new_nuc_name)
+        elif a.name=='H5T':
+            r1 = firstLetter+residue.resname[1]+'5'
+            r2 = firstLetter+new_nuc_name+'5'
+            dict_key = r1+'_'+r2
+            if bRNA:
+                hybrid_residue_name = rna_names[dict_key]
+            else:
+                hybrid_residue_name = dna_names[dict_key]
+            return(hybrid_residue_name,residue.resname[1],new_nuc_name)
     hybrid_residue_name = residue.resname+new_nuc_name
     return(hybrid_residue_name,residue.resname[1],new_nuc_name)
 
@@ -427,9 +427,9 @@ def apply_nuc_mutation(m, residue, new_nuc_name, mtp_file, bRNA=False):
 
 #    hybrid_residue_name = residue.resname+new_nuc_name
     hybrid_residue_name,resname1,resname2 = get_nuc_hybrid_resname(residue,new_nuc_name,bRNA)
-    print 'log_> Residue to mutate: %d | %s | %s ' % ( residue.id, residue.resname, residue.chain_id)
-    print 'log_> Mutation to apply: %s->%s' % (residue.resname[1], new_nuc_name)
-    print 'log_> Hybrid residue name: %s' % hybrid_residue_name
+    print('log_> Residue to mutate: %d | %s | %s ' % ( residue.id, residue.resname, residue.chain_id))
+    print('log_> Mutation to apply: %s->%s' % (residue.resname[1], new_nuc_name))
+    print('log_> Hybrid residue name: %s' % hybrid_residue_name)
     hybrid_res, bonds, imps, diheds, rotdic = get_hybrid_residue(hybrid_residue_name, mtp_file)
 #    hybrid_res.nm2a()
 
@@ -438,8 +438,8 @@ def apply_nuc_mutation(m, residue, new_nuc_name, mtp_file, bRNA=False):
         if atom.name[0] != 'D':
             atom.x = residue[atom.name].x
     m.replace_residue( residue, hybrid_res)
-    print 'log_> Inserted hybrid residue %s at position %d (chain %s)' %\
-          (hybrid_res.resname, hybrid_res.id, hybrid_res.chain_id)
+    print('log_> Inserted hybrid residue %s at position %d (chain %s)' %\
+          (hybrid_res.resname, hybrid_res.id, hybrid_res.chain_id))
 
 
 def apply_aa_mutation(m, residue, new_aa_name, mtp_file, bStrB, infileB):
@@ -454,13 +454,13 @@ def apply_aa_mutation(m, residue, new_aa_name, mtp_file, bStrB, infileB):
         olkey = check_OPLS_LYS( residue )
 
     hybrid_residue_name = olkey+'2'+new_aa_name
-    if hybrid_residue_name in noncanonical_aa.keys():
+    if hybrid_residue_name in list(noncanonical_aa.keys()):
         hybrid_residue_name = noncanonical_aa[hybrid_residue_name]
 #    if hybrid_residue_name in longname_aa.keys():
 #        hybrid_residue_name = longname_aa[hybrid_residue_name]
-    print 'log_> Residue to mutate: %d | %s | %s ' % ( residue.id, residue.resname, residue.chain_id)
-    print 'log_> Mutation to apply: %s->%s' % (olkey, new_aa_name)
-    print 'log_> Hybrid residue name: %s' % hybrid_residue_name
+    print('log_> Residue to mutate: %d | %s | %s ' % ( residue.id, residue.resname, residue.chain_id))
+    print('log_> Mutation to apply: %s->%s' % (olkey, new_aa_name))
+    print('log_> Hybrid residue name: %s' % hybrid_residue_name)
     hybrid_res, bonds, imps, diheds, rotdic = get_hybrid_residue(hybrid_residue_name, mtp_file)
     #hybrid_res.nm2a()
     bb_super(residue, hybrid_res )
@@ -470,24 +470,24 @@ def apply_aa_mutation(m, residue, new_aa_name, mtp_file, bStrB, infileB):
     hash2 = rename_to_match_library(hybrid_res)
     set_conformation(residue, hybrid_res, rotdic)
     if bStrB:
-	print "log_> Set Bstate geometry according to the provided structure"
-   	mB = Model(infileB,bPDBTER=True)
-   	rename_atoms_to_gromacs( mB )
-	mB.nm2a()
-	residueB = mB.residues[residue.id-1]
-    	bb_super(residue, residueB )
-	for atom in hybrid_res.atoms:
+        print("log_> Set Bstate geometry according to the provided structure")
+        mB = Model(infileB,bPDBTER=True)
+        rename_atoms_to_gromacs( mB )
+        mB.nm2a()
+        residueB = mB.residues[residue.id-1]
+        bb_super(residue, residueB )
+        for atom in hybrid_res.atoms:
             if atom.name[0] == 'D':
-	        for atomB in residueB.atoms:
-		    if atomB.name == hybrid_res.morphes[atom.name]['n1']:
-	 	        atom.x = atomB.x
+                for atomB in residueB.atoms:
+                    if atomB.name == hybrid_res.morphes[atom.name]['n1']:
+                        atom.x = atomB.x
     rename_back(residue,hash1)
     rename_back(hybrid_res,hash2)
     ## VG rename residue atoms back
 
     m.replace_residue( residue, hybrid_res)
-    print 'log_> Inserted hybrid residue %s at position %d (chain %s)' %\
-          (hybrid_res.resname, hybrid_res.id, hybrid_res.chain_id)
+    print('log_> Inserted hybrid residue %s at position %d (chain %s)' %\
+          (hybrid_res.resname, hybrid_res.id, hybrid_res.chain_id))
 
 
 def apply_mutation(m, mut, mtp_file, bStrB, infileB, bRNA):
@@ -504,7 +504,7 @@ def apply_mutation(m, mut, mtp_file, bStrB, infileB, bRNA):
 
 
 def get_hybrid_residue(residue_name, mtp_file = 'ffamber99sb.mtp'):
-    print 'log_> Scanning database for %s ' % residue_name
+    print('log_> Scanning database for %s ' % residue_name)
     resi, bonds, imps, diheds, rotdic = read_mtp_entry(residue_name, filename = mtp_file, version = 'new')
     if len(resi.atoms) == 0:
         raise mtpError("Hybrid residue %s not found in %s" % (residue_name, mtp_file) )
@@ -518,7 +518,7 @@ def rename_ile(residue):
            'HD2':'HD12',
            'HD3':'HD13'
            }
-    for key, value in dic.items():
+    for key, value in list(dic.items()):
         try:
             atom = residue[key]
             atom.name = value
@@ -552,120 +552,120 @@ def get_ff_path( ff ):
         elif os.path.isdir(pff):
             ff_path = pff
         else:
-            print >>sys.stderr,' Error: forcefield path "%s" not found' % ff
+            print(' Error: forcefield path "%s" not found' % ff, file=sys.stderr)
             sys.exit(0)
     else:
         ff_path = ff
-    print 'Opening forcefield: %s' % ff_path
+    print('Opening forcefield: %s' % ff_path)
     return ff_path
 
 
 def main(argv):
 
-   options = [
-        Option( "-resinfo", "bool", False, "print a 3-letter -> 1-letter residue list"),
-        Option( "-dna", "bool", False, "generate hybrid residue for the DNA nucleotides"),
-        Option( "-rna", "bool", False, "generate hybrid residue for the RNA nucleotides"),
-##         Option( "-r", "rvec", [1,2,3], "some string"),
-##         Option( "-b", "bool", True, "bool"),
-##         Option( "-r2", "rvec", [1,2,3], "some vector that does wonderful things and returns always segfaults")
+    options = [
+         Option( "-resinfo", "bool", False, "print a 3-letter -> 1-letter residue list"),
+         Option( "-dna", "bool", False, "generate hybrid residue for the DNA nucleotides"),
+         Option( "-rna", "bool", False, "generate hybrid residue for the RNA nucleotides"),
+ ##         Option( "-r", "rvec", [1,2,3], "some string"),
+ ##         Option( "-b", "bool", True, "bool"),
+ ##         Option( "-r2", "rvec", [1,2,3], "some vector that does wonderful things and returns always segfaults")
+         ]
+
+    files = [
+        FileOption("-f", "r",["pdb","gro"],"protein.pdb", "input structure file"),
+        FileOption("-fB", "r",["pdb","gro"],"proteinB.pdb", "input structure file of the Bstate (optional)"),
+        FileOption("-o", "w",["pdb","gro"],"out.pdb", "output structure file"),
+        FileOption("-ff", "dir",["ff"],"amber99sbmut", "path to mutation forcefield"),
+        FileOption("-script", "r",["txt"],"mutations.txt", "text file with mutations to insert"),
         ]
 
-   files = [
-       FileOption("-f", "r",["pdb","gro"],"protein.pdb", "input structure file"),
-       FileOption("-fB", "r",["pdb","gro"],"proteinB.pdb", "input structure file of the Bstate (optional)"),
-       FileOption("-o", "w",["pdb","gro"],"out.pdb", "output structure file"),
-       FileOption("-ff", "dir",["ff"],"amber99sbmut", "path to mutation forcefield"),
-       FileOption("-script", "r",["txt"],"mutations.txt", "text file with mutations to insert"),
-       ]
-
-   help_text = ('This script applies mutations of residues in a structure file ',
-                'for subsequent free energy calculations like FEP, TI, etc.',
-                'The mutation information and dummy placements are taken from',
-                'the hybrid residue database "mutres.mtp". The best way to use',
-                'this script is to take a pdb/gro file that has been written with pdb2gmx',
-                'with all hydrogen atoms present.'
-                'The program can either be executed interactively or via script.',
-                'The script file simply has to consist of "resi_number target_residue." pairs.',
-                'The script uses an extended one-letter code for amino acids to account for',
-                'different protonation states. Use the -resinfo flag to print the dictionary.',
-                'Currently available force fields:',
-                '    - amber99sbmut (Hornak et al, 2006)',
-                '    - amber99sb-star-ildn-mut (Best & Hummer, 2009; Lindorff-Larsen et al, 2010)',
-                '    - charmm22starmut.ff (Piana et al, 2011)',
-                '    - charmm36mut (Best et al, 2012)',
-                '    - oplsaamut (Jorgensen et al, 1996; Kaminski et al, 2001)',
-                '',
-                '',
-                'Please cite:',
-		'Vytautas Gapsys, Servaas Michielssens, Daniel Seeliger and Bert L. de Groot.',
-		'Automated Protein Structure and Topology Generation for Alchemical Perturbations.',
-		'J. Comput. Chem. 2015, 36, 348-354. DOI: 10.1002/jcc.23804',
-		'',
-		'Old pmx (pymacs) version:',
-                'Daniel Seeliger and Bert L. de Groot. Protein Thermostability Calculations Using',
-                'Alchemical Free Energy Simulations, Biophysical Journal, 98(10):2309-2316 (2010)',
-                '',
-                '',
-                '',
-                )
+    help_text = ('This script applies mutations of residues in a structure file ',
+                 'for subsequent free energy calculations like FEP, TI, etc.',
+                 'The mutation information and dummy placements are taken from',
+                 'the hybrid residue database "mutres.mtp". The best way to use',
+                 'this script is to take a pdb/gro file that has been written with pdb2gmx',
+                 'with all hydrogen atoms present.'
+                 'The program can either be executed interactively or via script.',
+                 'The script file simply has to consist of "resi_number target_residue." pairs.',
+                 'The script uses an extended one-letter code for amino acids to account for',
+                 'different protonation states. Use the -resinfo flag to print the dictionary.',
+                 'Currently available force fields:',
+                 '    - amber99sbmut (Hornak et al, 2006)',
+                 '    - amber99sb-star-ildn-mut (Best & Hummer, 2009; Lindorff-Larsen et al, 2010)',
+                 '    - charmm22starmut.ff (Piana et al, 2011)',
+                 '    - charmm36mut (Best et al, 2012)',
+                 '    - oplsaamut (Jorgensen et al, 1996; Kaminski et al, 2001)',
+                 '',
+                 '',
+                 'Please cite:',
+                 'Vytautas Gapsys, Servaas Michielssens, Daniel Seeliger and Bert L. de Groot.',
+                 'Automated Protein Structure and Topology Generation for Alchemical Perturbations.',
+                 'J. Comput. Chem. 2015, 36, 348-354. DOI: 10.1002/jcc.23804',
+                 '',
+                 'Old pmx (pymacs) version:',
+                 'Daniel Seeliger and Bert L. de Groot. Protein Thermostability Calculations Using',
+                 'Alchemical Free Energy Simulations, Biophysical Journal, 98(10):2309-2316 (2010)',
+                 '',
+                 '',
+                 '',
+                 )
 
 
-   cmdl = Commandline( argv, options = options,
-                       fileoptions = files,
-                       program_desc = help_text,
-                       check_for_existing_files = False )
+    cmdl = Commandline( argv, options = options,
+                        fileoptions = files,
+                        program_desc = help_text,
+                        check_for_existing_files = False )
 
-   bDNA = cmdl['-dna']
-   bRNA = cmdl['-rna']
+    bDNA = cmdl['-dna']
+    bRNA = cmdl['-rna']
 
-   if cmdl['-resinfo']:
-       print 'Residue dictionary:'
-       lst = ext_one_letter.items()
-       lst.sort(lambda a,b: cmp(a,b))
-       for key, val in lst:
-           print "%5s %4s" % (key, val)
-       sys.exit(0)
+    if cmdl['-resinfo']:
+        print('Residue dictionary:')
+        lst = list(ext_one_letter.items())
+        lst.sort(lambda a,b: cmp(a,b))
+        for key, val in lst:
+            print("%5s %4s" % (key, val))
+        sys.exit(0)
 
-   bStrB = False
-   infileB = ''
-   if cmdl.opt['-fB'].is_set:
-	bStrB = True
-	infileB = cmdl['-fB']
+    bStrB = False
+    infileB = ''
+    if cmdl.opt['-fB'].is_set:
+        bStrB = True
+        infileB = cmdl['-fB']
 
-   ffpath = get_ff_path(cmdl['-ff'])
-   if bDNA:
-       mtp_file = os.path.join( ffpath,'mutres_dna.mtp')
-   elif bRNA:
-       mtp_file = os.path.join( ffpath,'mutres_rna.mtp')
-   else:
-       mtp_file = os.path.join( ffpath,'mutres.mtp')
-   infile = cmdl['-f']
+    ffpath = get_ff_path(cmdl['-ff'])
+    if bDNA:
+        mtp_file = os.path.join( ffpath,'mutres_dna.mtp')
+    elif bRNA:
+        mtp_file = os.path.join( ffpath,'mutres_rna.mtp')
+    else:
+        mtp_file = os.path.join( ffpath,'mutres.mtp')
+    infile = cmdl['-f']
 
-   m = Model(infile,bPDBTER=True)
+    m = Model(infile,bPDBTER=True)
 
-   rename_atoms_to_gromacs( m )
+    rename_atoms_to_gromacs( m )
 #   m.write('ll.pdb')
-   m.nm2a()
+    m.nm2a()
 #   m.rename_atoms()
-   mutation_list = []
-   if cmdl.opt['-script'].is_set:
-       mutations_to_make = read_script( cmdl['-script'] )
-       for mut in mutations_to_make:
-	   check_residue_name( m.residues[ mut[0]-1 ] )
-           apply_mutation( m, mut, mtp_file, bStrB, infileB, bRNA )
-   else:
-       do_more = True
-       while do_more:
-           mutation = interactive_selection(m,ffpath)
-           apply_mutation( m, mutation, mtp_file, bStrB, infileB, bRNA )
-           if not ask_next(): do_more = False
+    mutation_list = []
+    if cmdl.opt['-script'].is_set:
+        mutations_to_make = read_script( cmdl['-script'] )
+        for mut in mutations_to_make:
+            check_residue_name( m.residues[ mut[0]-1 ] )
+            apply_mutation( m, mut, mtp_file, bStrB, infileB, bRNA )
+    else:
+        do_more = True
+        while do_more:
+            mutation = interactive_selection(m,ffpath)
+            apply_mutation( m, mutation, mtp_file, bStrB, infileB, bRNA )
+            if not ask_next(): do_more = False
 
 
-   m.write(cmdl['-o'],bPDBTER=True)
-   print
-   print 'mutations done...........'
-   print
+    m.write(cmdl['-o'],bPDBTER=True)
+    print()
+    print('mutations done...........')
+    print()
 
 
 def entry_point():

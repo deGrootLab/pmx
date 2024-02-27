@@ -285,7 +285,7 @@ PyObject *wrap_box_to_cryst1( PyObject *self, PyObject *args)
   PyObject2matrix(pBox, box);
   char line[256];
   box_to_cryst1(box, line);
-  return PyString_FromString( line );
+  return PyUnicode_FromString( line );
 }
 
 void Pyvec2rvec( PyObject *Ox, rvec x)
@@ -297,7 +297,7 @@ void Pyvec2rvec( PyObject *Ox, rvec x)
 
 real get_bond_contribution(PyObject *atom)
 {
-  char *elem = PyString_AsString( PyObject_GetAttrString(atom, "symbol") );
+  char *elem = PyUnicode_AsEncodedString( PyObject_GetAttrString(atom, "symbol"), "UTF-8", "strict" );
   if(strcmp(elem,"C") == 0 ) return CCONTR;
   else if( strcmp(elem,"H") == 0) return HCONTR;
   else if( strcmp(elem,"N") == 0) return NCONTR;
@@ -317,7 +317,7 @@ void atom_ids_from_py_atomlist( PyObject *list, int *atom_ids)
   int i;
   for(i=0;i<nat;i++){
     PyObject *atom = PySequence_Fast_GET_ITEM(list, i);
-    int atom_id =  PyInt_AsLong (PyObject_GetAttrString(atom,"id") ) - 1;
+    int atom_id =  PyLong_AsLong (PyObject_GetAttrString(atom,"id") ) - 1;
     atom_ids[i] = atom_id;
   }
 }
@@ -418,7 +418,7 @@ void build_b13_from_bonds( PyObject *atomlist)
   for(i=0;i<natoms;i++){
     PyObject *atom = PySequence_GetItem(atomlist, i);
     PyObject *b13 = PyObject_GetAttrString(atom,"b13");
-    int atom_id = PyInt_AsLong (PyObject_GetAttrString(atom,"id") );
+    int atom_id = PyLong_AsLong (PyObject_GetAttrString(atom,"id") );
 
     PyObject *bonds = PyObject_GetAttrString(atom,"bonds");
     int len_bonds = PySequence_Length(bonds);
@@ -428,7 +428,7 @@ void build_b13_from_bonds( PyObject *atomlist)
       int len_bbonds = PySequence_Length(bb_bonds);
       for(l=0;l<len_bbonds;l++){
 	PyObject *bond = PySequence_GetItem(bb_bonds, l);
-	int atom_id2 = PyInt_AsLong (PyObject_GetAttrString(bond,"id") );
+	int atom_id2 = PyLong_AsLong (PyObject_GetAttrString(bond,"id") );
 	if( atom_id < atom_id2 ) {
 	  PyObject *bb13 = PyObject_GetAttrString(bond,"b13");
 	  PyList_Append(b13, bond );
@@ -447,7 +447,7 @@ void build_b14_from_bonds(PyObject *atomlist )
   for(i=0;i<natoms;i++){
     PyObject *atom = PySequence_GetItem(atomlist, i);
     PyObject *b14 = PyObject_GetAttrString(atom,"b14");
-    int atom_id = PyInt_AsLong (PyObject_GetAttrString(atom,"id") );
+    int atom_id = PyLong_AsLong (PyObject_GetAttrString(atom,"id") );
 
     PyObject *b13 = PyObject_GetAttrString(atom,"b13");
     int len_b13 = PySequence_Length(b13);
@@ -457,7 +457,7 @@ void build_b14_from_bonds(PyObject *atomlist )
       int len_bonds = PySequence_Length(bb_bonds);
       for(l=0;l<len_bonds;l++){
 	PyObject *bond = PySequence_GetItem(bb_bonds, l);
-	int atom_id2 = PyInt_AsLong (PyObject_GetAttrString(bond,"id") );
+	int atom_id2 = PyLong_AsLong (PyObject_GetAttrString(bond,"id") );
 	if( atom_id < atom_id2  && ! is_bound(atom, atom_id2 -1 )) {
 	  PyObject *bb14 = PyObject_GetAttrString(bond,"b14");
 	  PyList_Append(b14, bond );
@@ -491,19 +491,19 @@ con_table *build_table( PyObject *atomlist)
     size = 0;
     for(k=0;k<nbonds;k++){
       PyObject *a = PySequence_Fast_GET_ITEM( bonds, k );
-      int id = PyInt_AsLong( PyObject_GetAttrString(a,"id") ) - 1;
+      int id = PyLong_AsLong( PyObject_GetAttrString(a,"id") ) - 1;
       t->con[i][size] = id;
       size++;
     }
     for(k=0;k<nb13;k++){
       PyObject *a = PySequence_Fast_GET_ITEM( b13, k );
-      int id = PyInt_AsLong( PyObject_GetAttrString(a,"id") ) - 1;
+      int id = PyLong_AsLong( PyObject_GetAttrString(a,"id") ) - 1;
       t->con[i][size] = id;
       size++;
     }
     for(k=0;k<nb14;k++){
       PyObject *a = PySequence_Fast_GET_ITEM( b14, k );
-      int id = PyInt_AsLong( PyObject_GetAttrString(a,"id") ) - 1;
+      int id = PyLong_AsLong( PyObject_GetAttrString(a,"id") ) - 1;
       t->con[i][size] = id;
       size++;
     }
@@ -584,7 +584,7 @@ PyObject* wrap_search_neighbors(PyObject *self, PyObject *args)
   for(i=0;i<natoms;i++){
     //    PyObject *atom = PySequence_GetItem(atomlist, i);
     PyObject *atom = PySequence_Fast_GET_ITEM(atomlist, i);
-    int atom_id = PyInt_AsLong(PyObject_GetAttrString(atom,"id")) - 1;
+    int atom_id = PyLong_AsLong(PyObject_GetAttrString(atom,"id")) - 1;
     PyObject *neighbor_list = PyObject_GetAttrString(atom,"neighbors");
     for(k=0;k<nat[i];k++){
       int id = nlist[i][k];

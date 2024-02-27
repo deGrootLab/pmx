@@ -31,11 +31,11 @@ __doc__="""
 This file contains stuff to deal with the Dunbrack rotamer
 library"""
 import os, sys
-from library import pmx_data_file, _aacids_dic
+from .library import pmx_data_file, _aacids_dic
 
-import molecule 
-import cPickle
-from geometry import *
+from . import molecule
+import pickle
+from .geometry import *
 
 
 _aa_chi = { 'CYS' :
@@ -46,7 +46,7 @@ _aa_chi = { 'CYS' :
           2: [('CA' , 'CB' , 'CG' , 'OD1'), ['OD1','OD2','HD2']]},
         'GLU' :
         { 1: [('N'  , 'CA' , 'CB' , 'CG' ),['1HB','2HB','CG','1HG','2HG','CD','OE1','OE2','HE2']],
-          2: [('CA' , 'CB' , 'CG' , 'CD' ),['1HG','2HG','CD','OE1','OE2','HE2']], 
+          2: [('CA' , 'CB' , 'CG' , 'CD' ),['1HG','2HG','CD','OE1','OE2','HE2']],
           3: [('CB' , 'CG' , 'CD' , 'OE1'),['OE1','OE2','HE2']] },
         'PHE' :
         { 1: [('N'  , 'CA' , 'CB' , 'CG' ),['1HB', '2HB', 'CG' ,'CD1', 'HD1', 'CD2', 'HD2', 'CE1', 'HE1', 'CE2', 'HE2', 'CZ', 'HZ']],
@@ -65,8 +65,8 @@ _aa_chi = { 'CYS' :
           2: [('CA' , 'CB' , 'CG' , 'ND1'),['CD2',  'ND1',  'HD2',  'HD1',  'NE2',  'CE1',  'HE2', 'HE1']] },
         'ILE' :
         { 1: [('N'  , 'CA' , 'CB' , 'CG1'),['HB','CG1','1HG1','2HG1','CG2','1HG2','2HG2','3HG2','CD1','1HD1','2HD1','3HD1']],
-#          2: [('CA' , 'CB' , 'CG1', 'CD1'),['1HG1','1HG2','CG2','1HG2','2HG2','3HG2','CD1','1HD1','2HD1','3HD1']] }, 
-          2: [('CA' , 'CB' , 'CG1', 'CD1'),['1HG1','2HG1','CD1','1HD1','2HD1','3HD1']] }, 
+#          2: [('CA' , 'CB' , 'CG1', 'CD1'),['1HG1','1HG2','CG2','1HG2','2HG2','3HG2','CD1','1HD1','2HD1','3HD1']] },
+          2: [('CA' , 'CB' , 'CG1', 'CD1'),['1HG1','2HG1','CD1','1HD1','2HD1','3HD1']] },
         'LYS' :
         { 1: [('N'  , 'CA' , 'CB'  ,'CG' ),['1HB','2HB','CG','1HG','2HG','CD','1HD','2HD','CE','1HE','2HE','NZ','1HZ','2HZ','3HZ']],
           2: [('CA' , 'CB' , 'CG'  ,'CD' ),['1HG','2HG','CD','1HD','2HD','CE','1HE','2HE','NZ','1HZ','2HZ','3HZ']],
@@ -79,7 +79,7 @@ _aa_chi = { 'CYS' :
           4: [('CG' , 'CD' , 'CE'  ,'NZ' ),['1HE','2HE','NZ','1HZ','2HZ']] },
         'LEU' :
         { 1: [('N'  , 'CA' , 'CB' , 'CG' ),['1HB','2HB','CG', 'HG','CD1','1HD1','2HD1','3HD1','CD2','1HD2','2HD2','3HD2']],
-          2: [('CA' , 'CB' , 'CG' , 'CD1'), ['HG','CD1','1HD1','2HD1','3HD1','CD2','1HD2','2HD2','3HD2']]}, 
+          2: [('CA' , 'CB' , 'CG' , 'CD1'), ['HG','CD1','1HD1','2HD1','3HD1','CD2','1HD2','2HD2','3HD2']]},
         'MET' :
         { 1: [('N'  , 'CA' , 'CB'  ,'CG' ),['1HB', '2HB', 'CG', '1HG', '2HG', 'SD', 'CE', '1HE', '2HE', '3HE']],
           2: [('CA' , 'CB' , 'CG'  ,'SD' ),['1HG', '2HG', 'SD', 'CE', '1HE', '2HE', '3HE']],
@@ -89,7 +89,7 @@ _aa_chi = { 'CYS' :
           2: [('CA' , 'CB' , 'CG' , 'OD1'), ['OD1','ND2','1HD2','2HD2']]},
         'PRO' :
         { 1: [('N'  , 'CA' , 'CB' , 'CG' ),[]],
-          2: [('CA' , 'CB' , 'CG' , 'CD' ), []]}, 
+          2: [('CA' , 'CB' , 'CG' , 'CD' ), []]},
         'GLN' :
         { 1: [('N'  , 'CA' , 'CB' , 'CG' ),['1HB','2HB','CG','1HG','2HG','CD','OE1','NE2','1HE2','2HE2']],
           2: [('CA' , 'CB' , 'CG' , 'CD' ), ['1HG','2HG','CD','OE1','NE2','1HE2','2HE2']],
@@ -129,19 +129,19 @@ def make_bbdep(min_val = .01):
         chi4 = float(entr[12])
         key = (round(phi,0),round(psi,0))
         if freq >= min_val:
-            if dic.has_key(resn):
-                if dic[resn].has_key(key):
+            if resn in dic:
+                if key in dic[resn]:
                     dic[resn][key].append([freq, chi1, chi2, chi3, chi4])
                 else:
                     dic[resn][key] = [[freq, chi1, chi2, chi3, chi4]]
             else:
                 dic[resn] = {key:[[freq, chi1, chi2, chi3, chi4]]}
-    for key, val in dic.items():
-        for bb, lst in val.items():
+    for key, val in list(dic.items()):
+        for bb, lst in list(val.items()):
             lst.sort(lambda a,b: cmp(float(a[0]),float(b[0])))
             lst.reverse()
     fp = open('bbdep.pkl','w')
-    cPickle.dump(dic,fp)
+    pickle.dump(dic,fp)
 
 
 
@@ -168,7 +168,7 @@ def real_resname(r):
            'HSD':'HIS','HISH':'HIS','HISD':'HIS','ASH':'ASP','ASPP':'ASP','ASPH':'ASP',
            'GLH':'GLU','GLUH':'GLU','GLUP':'GLU',
            }
-    if dic.has_key(r): return dic[r]
+    if r in dic: return dic[r]
     else: return r
 
 def get_rotamers(bbdep, resname, phi, psi, residue = False, hydrogens = True, full = False):
@@ -237,7 +237,7 @@ def select_best_rotamer(model, rotamers):
 #    print 'Checking %d rotamers....' % len(rotamers)
     for i, r in enumerate(rotamers):
         score = check_overlaps(model, r, nb_list)
-        print i, score
+        print(i, score)
         if score < .2:
             return r
         if score < min_score:
@@ -255,6 +255,3 @@ def mutate( residue, new_aa, bbdep):
     rotamers = get_rotamers( bbdep, new_aa, phi, psi, residue=residue, full = True, hydrogens = False)
     new_r = select_best_rotamer(m, rotamers)
     m.replace_residue( residue, new_r )
-    
-
-

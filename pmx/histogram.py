@@ -37,7 +37,7 @@ from numpy import *
 
 class Histogram:
     """ class to store data as histogram """
-    
+
     def __init__(self,begin,end,incr):
         """ initialize histogram (start, end, increment)"""
         self.values=arange(begin,end,incr)
@@ -56,7 +56,7 @@ class Histogram:
                        x<self.values[i+1]:
                     self.counter[self.values[i]]+=weight
                     break
-            
+
     def write(self,filename=None):
         """ write histogram data to stdout or file"""
         if not filename:
@@ -72,7 +72,7 @@ class Histogram:
         for value in self.values:
             list.append(self.counter[value])
         x=trapz(list,x=self.values)
-        for k in self.counter.keys():
+        for k in list(self.counter.keys()):
             self.counter[k]=self.counter[k]/x
 
     def integ(self,  min_val = None,  max_val = None):
@@ -98,9 +98,9 @@ class Histogram:
                     elif value > min_val:
                         list.append(self.counter[value])
                         x.append( value)
-                        
+
         return trapz(list,x=x)
-        
+
 
     def mean(self):
         """ calculate the mean value"""
@@ -130,19 +130,16 @@ class Histogram:
 
 
 if __name__=='__main__':
-    print 'testing histogram'
+    print('testing histogram')
     h = Histogram(0,10,1)
     import random
     for i in range(1000):
         n = random.randint(0,10)
         h.add(n)
-    print 'mean = ', h.mean()
-    print 'stdev = ', h.stddev()
-    print 'var = ', h.variance()
-    print 'integ = ', h.integ()
-    print 'norming histogram....'
+    print('mean = ', h.mean())
+    print('stdev = ', h.stddev())
+    print('var = ', h.variance())
+    print('integ = ', h.integ())
+    print('norming histogram....')
     h.norm()
-    print 'new integral', h.integ()
-    
-
-
+    print('new integral', h.integ())

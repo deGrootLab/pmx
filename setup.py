@@ -82,7 +82,7 @@ setup(name='pmx',
       include_package_data=True,
       zip_safe=False,
       ext_modules=extensions,
-      python_requires=">=2.7, <3",
+      python_requires=">=3.0",
       install_requires=['numpy>=1.14', 'scipy>=1.1', 'matplotlib>=2.2'],
       entry_points={'console_scripts': ['pmx = pmx.scripts.cli:entry_point']}
       )

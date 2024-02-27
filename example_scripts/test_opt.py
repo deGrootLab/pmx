@@ -1,3 +1,6 @@
+import pytest
+pytest.skip(allow_module_level=True)
+
 import sys, os
 from pmx import *
 
@@ -13,9 +16,9 @@ options = [
 
 
 file_options = [
-    FileOption("-pdb", "r",["pdb"], "protein.pdb", "input pdb file"), 
-    FileOption("-opdb", "w",["pdb","gro"], "out.pdb", "output pdb or gro file"),  
-    FileOption("-mpdb", "r/m",["pdb","gro"], "one_of_many.pdb", "several pdb files"),  
+    FileOption("-pdb", "r",["pdb"], "protein.pdb", "input pdb file"),
+    FileOption("-opdb", "w",["pdb","gro"], "out.pdb", "output pdb or gro file"),
+    FileOption("-mpdb", "r/m",["pdb","gro"], "one_of_many.pdb", "several pdb files"),
     ]
 
 help_text = [ "This program does useful things",
@@ -23,11 +26,9 @@ help_text = [ "This program does useful things",
               "but not in combination with d and e"]
 
 
-cmdl = Commandline( sys.argv, options = options, fileoptions = file_options, program_desc = help_text, version = "2.3") 
+cmdl = Commandline( sys.argv, options = options, fileoptions = file_options, program_desc = help_text, version = "2.3")
 
 
 
-string_opt = cmdl['-s'] 
-input_pdb = cmdl['-pdb'] 
-
-
+string_opt = cmdl['-s']
+input_pdb = cmdl['-pdb']

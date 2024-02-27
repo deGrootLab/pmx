@@ -27,21 +27,21 @@
 # CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 # ----------------------------------------------------------------------
-from parser import *
+from .parser import *
 import re
-import sys    
+import sys
 #---------------------------------------------------
 class IndexGroup:
     """ CLASS TO DEAL WITH GROMACS INDEX FILES"""
     def __init__(self, name = '', ids = [], atoms = []):
         self.ids = []
         if atoms:
-            self.ids = map(lambda a: a.id, atoms )
+            self.ids = [a.id for a in atoms]
         else:
             self.ids = ids
         self.name = name
         self.ids.sort()
-        
+
     def __str__(self):
         s = ''
         s+= '[ %s ]\n' % self.name
@@ -115,7 +115,7 @@ class IndexFile:
         if fn:
             fp = open(fn,'w')
         for gr in self.groups:
-            print >>fp, str(gr)+'\n'
+            print(str(gr)+'\n', file=fp)
 
 
     def __str__(self):
@@ -129,8 +129,8 @@ class IndexFile:
 
     def add_group( self, group ):
         if group.name in self.names:
-            print >> sys.stderr, "IndexFile has group %s !! " % group.name
-            print >> sys.stderr, "Group %s will be replaced !!" % group.name
+            print("IndexFile has group %s !! " % group.name, file=sys.stderr)
+            print("Group %s will be replaced !!" % group.name, file=sys.stderr)
             self.delete_group( group.name )
         self.names.append( group.name )
         self.groups.append( group )
@@ -149,8 +149,8 @@ class IndexFile:
 
     def __delitem__(self, item ):
         self.delete_group( item )
-    
-                           
+
+
 
 #---------------------------------------------------
 
@@ -158,26 +158,22 @@ class IndexFile:
 def get_index(atom_list = None, residue_list = None, chain_list = None):
     """ return atom indices from a list of atoms/residues/chains"""
     if not atom_list and not residue_list and not chain_list:
-        print 'Error: Need list~'
+        print('Error: Need list~')
         sys.exit(1)
     if atom_list:
-        lst = map(lambda a: a.id, atom_list)
+        lst = [a.id for a in atom_list]
         return lst
     if residue_list:
         al = []
-        map(lambda r: al.extend(r.atoms), residue_list)
+        list(map(lambda r: al.extend(r.atoms), residue_list))
         return get_index(atom_list = al)
     if chain_list:
         al = []
-        map(lambda c: al.extend(c.atoms), chain_list)
+        list(map(lambda c: al.extend(c.atoms), chain_list))
         return get_index(atom_list = al)
-    
-        
+
+
 def make_index_group(atomlist, name):
     lst = get_index(atomlist)
     g = IndexGroup(ids = lst, name = name)
     return g
-
-    
-
-
