@@ -714,9 +714,9 @@ class LigandAtomMapping:
             # when n1 and n2 have an equal number of them bound
             nH1 = self._countHydrogens(nb1)
             nH2 = self._countHydrogens(nb2)
-            if nH1!=nH2:
-                continue
-            # also skip the rest of the loop if there are no neighbour hydrogens
+            # Related to issue #47. Hydrogens can be mapped for CH2 and CH3 for instance.
+            # Thus, in case of nH1 != nH2, we can proceed to mapping hydrogens
+            # But we need to skip the rest of the loop if there are no neighbour hydrogens
             if nH1==0 or nH2==0:
                 continue
 
