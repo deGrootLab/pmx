@@ -22,7 +22,7 @@ except:
 # ================
 # Helper functions
 # ================
-def reformatPDB(fname,num,randint=42,bStrict=False):
+def reformatPDB(fname,num,randint=42,bStrict=False,bCONECT=False):
     """Higher level command to read, format and call a pdb writer.
 
     Params
@@ -35,6 +35,8 @@ def reformatPDB(fname,num,randint=42,bStrict=False):
         random number to mark the output pdb
     bStrict : bool
         limit atom names to 3 char (default False)
+    bCONECT : bool
+        read CONECT entries from pdb (default False)
     Returns
     -------
     newname : str
@@ -46,7 +48,7 @@ def reformatPDB(fname,num,randint=42,bStrict=False):
     """
 
     newname = "tempFormat_"+str(randint)+'_'+str(num)+".pdb"
-    m = Model().read(fname)
+    m = Model().read(fname,bCONECT=bCONECT)
 
     # adjust atom names and remember the changes
     atomNameID = {}
@@ -61,10 +63,11 @@ def reformatPDB(fname,num,randint=42,bStrict=False):
         atomNameID[a.id] = a.name
         a.name = newAtomName
 
-    writeFormatPDB(newname,m,bStrict=bStrict)
+    writeFormatPDB(newname,m,bStrict=bStrict,
+                   _conect_entries=m._pdb_conect if bCONECT else None)
     return(newname,atomNameID,sigmaHoleID)
 
-def writeFormatPDB(fname,m,title="",nr=1,bStrict=False):
+def writeFormatPDB(fname,m,title="",nr=1,bStrict=False,_conect_entries=None):
     """Writes formatted pdb of a ligand.
 
     Params
@@ -76,9 +79,11 @@ def writeFormatPDB(fname,m,title="",nr=1,bStrict=False):
     title : str
         currently not used
     nr : int
-        currently not used 
+        currently not used
     bStrict : bool
         limit atom names to 3 char (default False)
+    _conect_entries : list
+        List of conect entries
     Returns
     -------
     None
@@ -105,6 +110,9 @@ def writeFormatPDB(fname,m,title="",nr=1,bStrict=False):
             print(foo,file=fp)
         else:
             print(atom,file=fp)
+    if _conect_entries is not None:
+        for line in _conect_entries:
+            fp.write(f"{line}\n")
     fp.write('ENDMDL\n')
     fp.close()
 
@@ -205,7 +213,7 @@ def assignFF(model, itp):
     ------
     model : pmx Model
         model
-    itp : itp TopolBase 
+    itp : itp TopolBase
         itp
 
     Returns
@@ -229,7 +237,7 @@ def readPairsFile(fn):
     Params
     ------
     fn : str
-        filename 
+        filename
 
     Returns
     -------
@@ -302,7 +310,7 @@ def superimposeStructures( fname1, fname2, m3, m2, plst, logfile ):
     m3 : pmx Model
         model m1 that will get the coordinates of m2
     m2 : pmx Model
-        model m2 that will be fit on m1 
+        model m2 that will be fit on m1
     plst : array
         pairs list
     Returns
@@ -476,7 +484,7 @@ class LigandAtomMapping:
                 counter+=1
         return(counter)
 
- 
+
 #*************************************************#
 # MCS #
 #*************************************************#
@@ -590,7 +598,7 @@ class LigandAtomMapping:
         n1_foo = []
         n2_foo = []
         for n1,n2 in list(zip(n1_list,n2_list)):
-            n1,n2 = self._checkTop(n1,n2) 
+            n1,n2 = self._checkTop(n1,n2)
             n1_foo.append(n1)
             n2_foo.append(n2)
         n1_list = cp.copy(n1_foo)
@@ -646,7 +654,7 @@ class LigandAtomMapping:
             n1,n2 = self._mapH( n1, n2 )
 
         # one more final check for possible issues with the 1-2, 1-3 and 1-4 interactions
-        n1,n2 = self._checkTop(n1,n2) 
+        n1,n2 = self._checkTop(n1,n2)
 
         # remove sigma hole virtual particles
         n1,n2 = self._removeSigmaHoles( n1,n2,self.sigmaHoleID1,self.sigmaHoleID2)
@@ -710,7 +718,7 @@ class LigandAtomMapping:
             nb1 = a1.GetNeighbors()
             nb2 = a2.GetNeighbors()
 
-            # only allow mapping hydrogens in those cases, 
+            # only allow mapping hydrogens in those cases,
             # when n1 and n2 have an equal number of them bound
             nH1 = self._countHydrogens(nb1)
             nH2 = self._countHydrogens(nb2)
@@ -813,18 +821,18 @@ class LigandAtomMapping:
         # 2) identify problematic mappings
         # 3) fix the problems: discard the atom with fewer mapped neighbours
 
-        ####### 1-2 #########    
+        ####### 1-2 #########
         # 1a) 1-2 lists
         dict12_mol1 = self._getList12(self.mol1,n1)
         dict12_mol2 = self._getList12(self.mol2,n2)
-        # 2a) identify problems 1-2; and 
+        # 2a) identify problems 1-2; and
         # 3a) fix 1-2
         rem12_mol2_start,rem12_mol2_end = self._findProblemsExclusions(n1,n2,dict12_mol1,dict12_mol2,case='1-2') # output: indeces of mol2
         n2,n1 = self._fixProblemsExclusions(self.mol2,self.mol1,n2,n1,rem12_mol2_start,rem12_mol2_end)
         rem12_mol1_start,rem12_mol1_end = self._findProblemsExclusions(n2,n1,dict12_mol2,dict12_mol1,case='1-2') # output: indeces of mol1
         n1,n2 = self._fixProblemsExclusions(self.mol1,self.mol2,n1,n2,rem12_mol1_start,rem12_mol1_end)
 
-        ####### 1-3 #########    
+        ####### 1-3 #########
         # 1b) 1-3 lists
         dict13_mol1 = self._getList13(self.mol1,n1)
         dict13_mol2 = self._getList13(self.mol2,n2)
@@ -835,11 +843,11 @@ class LigandAtomMapping:
         rem13_mol1_start,rem13_mol1_end = self._findProblemsExclusions(n2,n1,dict13_mol2,dict13_mol1,case='1-3') # output: indeces of mol1
         n1,n2 = self._fixProblemsExclusions(self.mol1,self.mol2,n1,n2,rem13_mol1_start,rem13_mol1_end)
 
-        ####### 1-4 #########    
+        ####### 1-4 #########
         # 1b) 1-4 lists
         dict14_mol1 = self._getList14(self.mol1,n1)
         dict14_mol2 = self._getList14(self.mol2,n2)
-        # 2b) identify problems 1-4 and 
+        # 2b) identify problems 1-4 and
         # 3b) fix 1-4
         rem14_mol2_start,rem14_mol2_end = self._findProblemsExclusions(n1,n2,dict14_mol1,dict14_mol2,case='1-4') # output: indeces of mol2
         n2,n1 = self._fixProblemsExclusions(self.mol2,self.mol1,n2,n1,rem14_mol2_start,rem14_mol2_end)
@@ -985,7 +993,7 @@ class LigandAtomMapping:
                     a,b = self._getAttr(n1,n2,iEnd,bar)
                     if( (a!=None) and (b!=None) ):
                         endNeighb = endNeighb+1
-                elif( iEnd==bar ): # atom of interest 
+                elif( iEnd==bar ): # atom of interest
                     a,b = self._getAttr(n1,n2,iEnd,foo)
                     if( (a!=None) and (b!=None) ):
                         endNeighb = endNeighb+1
@@ -1048,7 +1056,7 @@ class LigandAtomMapping:
         matchDict1 = {}
         matchDict2 = {}
         for id1,id2 in list(zip(ind1,ind2)):
-            # find id1 
+            # find id1
             key1 = ''
             for i in range(0,len(n1_fragments)):
                 if id1 in n1_fragments[i]:
@@ -1710,7 +1718,7 @@ class LigandAtomMapping:
                     pairs1.append(keep1)
                     pairs2.append(keep2)
             return(pairs1,pairs2)
-    
+
         # mcs
         for ind1 in id1:
             c1 = mol1.GetConformer()
@@ -1834,7 +1842,7 @@ class LigandAtomMapping:
             if bOK==True:
                 n1_largestB.append(nfoo)
                 n2_largestB.append(nbar)
-    
+
         # of the largest ones select the minRMSD
         rmsdMin = 9999.999
         for nfoo,nbar in list(zip(n1_largestB,n2_largestB)):
@@ -1984,8 +1992,8 @@ class LigandAtomMapping:
                 # when heavyAtom1 and heavyAtom2 have an equal number of them bound
                 heavyAtom1 = a1.GetNeighbors()[0]
                 heavyAtom2 = a2.GetNeighbors()[0]
-                nb1 = heavyAtom1.GetNeighbors() 
-                nb2 = heavyAtom2.GetNeighbors() 
+                nb1 = heavyAtom1.GetNeighbors()
+                nb2 = heavyAtom2.GetNeighbors()
                 nH1 = self._countHydrogens(nb1)
                 nH2 = self._countHydrogens(nb2)
                 if nH1!=nH2:
@@ -2061,7 +2069,7 @@ class LigandHybridTopology:
         self.d = 0.05
         self.logfile = None
         self.bDist = True # this variable is always set to True
-        
+
         for key, val in kwargs.items():
             setattr(self,key,val)
 
@@ -2069,7 +2077,7 @@ class LigandHybridTopology:
     def _makeHybridTop( self ):
         """The main function of this class.
             Generated hybrid topology
-    
+
         Parameters
         ----------
         None
@@ -2144,7 +2152,7 @@ class LigandHybridTopology:
 #####################################
         # make exclusions
         doLog(self.logfile,"Construct exclusions....")
-        self.newexclusions = [] 
+        self.newexclusions = []
         self.bHasExclusions = False
         self._make_exclusions()
 
@@ -2818,7 +2826,7 @@ class LigandHybridTopology:
 
     def _atoms_morphe( self, atoms ):
         for atom in atoms:
-            if atom.atomtypeB is not None and (atom.q!=atom.qB or atom.m != atom.mB): 
+            if atom.atomtypeB is not None and (atom.q!=atom.qB or atom.m != atom.mB):
                 return(True)
         return(False)
 
@@ -3021,9 +3029,7 @@ def _write_FF_file(atoms,file):
     for atype in atoms.keys():
         at = atoms[atype]
         fp.write('      %s      %s      %s      %s      %s      %s\n' % (at.type,at.sigmaA,at.epsA,at.A,at.sigmaB,at.epsB) )
-        
+
 def _merge_FF_files( fnameOut, ffsIn=[] ):
     atoms = _get_FF_atoms( ffsIn )
     _write_FF_file( atoms, fnameOut )
-    
-
