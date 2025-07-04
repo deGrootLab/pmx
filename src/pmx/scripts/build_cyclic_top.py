@@ -378,8 +378,8 @@ def main(argv):
    cmd = 'gmx grompp -p ../topol.top -c box.pdb -f em.mdp -o em.tpr'
    os.system(cmd)
    # mdrun
-   mdrun = '/usr/local/gromacs/2021/2021.2-impi2017-fftw337-gcc93-cuda11.1/bin/mdrun_threads'
-#   mdrun = 'gmx mdrun'
+#   mdrun = '/usr/local/gromacs/2021/2021.2-impi2017-fftw337-gcc93-cuda11.1/bin/mdrun_threads'
+   mdrun = 'gmx mdrun'
    cmd = '{0} -s em.tpr -c minimized.pdb -v -ntomp 1 -ntmpi 1'.format(mdrun)
    os.system(cmd)
    # clean after
