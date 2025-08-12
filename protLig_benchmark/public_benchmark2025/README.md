@@ -1,1 +1,1 @@
-The 'ddg_pmx.csv' file contains ddg data and individual dg data from 3 replicates of water and protein branches for the targets prepared by [OpenFE Industry Benchmarking Project](https://github.com/OpenFreeEnergy/IndustryBenchmarks2024/).
+The 'ddg_pmx.csv' file contains ddg data and individual dg data from 3 replicates of water and protein branches for the targets prepared by [OpenFE Industry Benchmarking Project](https://github.com/OpenFreeEnergy/IndustryBenchmarks2024/). The values are kJ/mol.
