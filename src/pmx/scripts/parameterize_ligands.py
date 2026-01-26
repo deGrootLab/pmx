@@ -1,3 +1,41 @@
+#!/usr/bin/env python
+
+# pmx  Copyright Notice
+# ============================
+#
+# The pmx source code is copyrighted, but you can freely use and
+# copy it as long as you don't change or remove any of the copyright
+# notices.
+#
+# ----------------------------------------------------------------------
+# pmx is Copyright (C) 2006-2013 by Daniel Seeliger 
+# pmx is Copyright (C) 2013-2022 by Vytautas Gapsys
+# pmx is Copyright (C) 2022-2023 by Vytautas Gapsys and David Hahn
+#
+#                        All Rights Reserved
+#
+# Permission to use, copy, modify, distribute, and distribute modified
+# versions of this software and its documentation for any purpose and
+# without fee is hereby granted, provided that the above copyright
+# notice appear in all copies and that both the copyright notice and
+# this permission notice appear in supporting documentation, and that
+# the names of Daniel Seeliger and Vytautas Gapsys and David Hahn
+# not be used in advertising or publicity
+# pertaining to distribution of the software without specific, written
+# prior permission.
+#
+# DANIEL SEELIGER AND VYTAUTAS GAPSYS AND DAVID HAHN DISCLAIM
+#  ALL WARRANTIES WITH REGARD TO THIS
+# SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+# FITNESS.  IN NO EVENT SHALL DANIEL SEELIGER AND VYTAUTAS GAPSYS 
+# AND DAVID HAHN BE LIABLE FOR ANY
+# SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+# RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+# CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+# CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+# ----------------------------------------------------------------------
+
+
 import sys, os
 from pmx import *
 from pmx.options import *
@@ -9,7 +47,113 @@ import copy as cp
 import random
 import numpy as np
 import re
+from rdkit import Chem
 
+def ecc_scaling( itp, eccScale ):
+    # get total charge
+    qtot = 0.0
+    for a in itp.atoms:
+        qtot += a.q
+
+    if np.round(qtot,3) != 0.0:
+        for a in itp.atoms:
+            a.q *= eccScale
+
+
+# functions for Gromacs force field  manuplation/conversion
+def set_charge_to_zero(itp):
+    q = 0.0
+    n = 0
+    for a in itp.atoms:
+        q += a.q
+        n += 1
+    intq = round(q)
+    diffq = intq - q
+    # round to 6 digit precision
+    deltaq = np.around(diffq / float(n), decimals=6)
+
+    newq = 0.0
+    for a in itp.atoms:
+        a.q += deltaq
+        a.q = np.around(a.q, decimals=6)
+        newq += a.q
+    # add remainder to first atom
+    intq = round(newq)
+    diffq = intq - newq
+    itp.atoms[0].q += diffq
+
+
+def change_atomtypes(itp, suffix):
+    for a in itp.atoms:
+        newtype = str(a.atomtype) + str(suffix)
+        a.atomtype = newtype
+
+    atypes = []
+    for at in itp.atomtypes:
+        newtype = str(at['name']) + str(suffix)
+        at['name'] = newtype
+
+
+# function to convert openFF molecule (ligand) to a parmed structure
+def ligandToPMDopenff(ligand,ff,chargeMethod='am1bcc'):
+    from openff.toolkit.typing.engines.smirnoff import ForceField
+    import parmed as pmd
+    import openff
+    if 'nagl' in chargeMethod:
+        from openff.toolkit.utils.toolkits import NAGLToolkitWrapper
+        wrapper = NAGLToolkitWrapper()
+
+    ligand_positions = ligand.conformers[0]
+
+    # Calculate am1bcc charges
+    print('Initial partial charges: ',ligand.partial_charges)
+    if ligand.partial_charges == None:
+        try:
+            if 'nagl' in chargeMethod:
+                wrapper.assign_partial_charges(molecule=ligand,partial_charge_method=f"{openff.nagl_models.get_nagl_model_dirs_paths()[0]}/openff-gnn-am1bcc-0.1.0-rc.4.pt")
+            else:
+                ligand.assign_partial_charges( chargeMethod )
+#               ligand.assign_partial_charges( 'gasteiger' )
+        except Exception as e:
+            raise Exception('Error in charge calculation for ligand {}: {}'.format(ligand.name, e))
+    # Give all atoms unique names so we can export to GROMACS
+    for idx, atom in enumerate(ligand.atoms):
+        atom.name = f'{atom.symbol}{idx}'
+
+    # initialize ForceField object
+    openff_forcefield = ForceField(ff)
+
+    # Do not assign H-bond constraints now, instead have ParmEd add them later
+    del openff_forcefield._parameter_handlers['Constraints']
+
+    ligand_topology = ligand.to_topology()
+    try:
+        ligand_system = openff_forcefield.create_openmm_system(ligand_topology, charge_from_molecules=[ligand])
+    except Exception as e:
+        raise Exception('Error in creating openmm system: {}'.format(e))
+    # Create OpenMM Topology from OpenFF Topology
+    omm_top = ligand_topology.to_openmm()
+
+    # Convert OpenMM System to a ParmEd structure.
+    pmd_structure = pmd.openmm.load_topology(omm_top, ligand_system, ligand_positions)
+    for r in pmd_structure.residues:
+        r.name = 'MOL'
+
+    return pmd_structure, ligand_topology, ligand_system, ligand_positions
+
+
+def charge_from_pdb( pdbfname ):
+    mol = Chem.MolFromPDBFile(pdbfname,removeHs=False)
+    charge = Chem.rdmolops.GetFormalCharge(mol)
+    return(charge)
+
+def charge_from_sdf( sdffname ):
+    mols = Chem.SDMolSupplier(sdffname,removeHs=False)
+    for mol in mols:
+        charge = Chem.rdmolops.GetFormalCharge(mol)
+        return(charge)
+
+    return(charge)
 def split_itp_ffitp( itpfname, ffitpfname, itpoutfname ):
     itp = TopolBase( itpfname )
     fp = open(ffitpfname,'w')
@@ -90,15 +234,15 @@ def gen_itp( fname_top, fname_gro, randnum ):
 
 def run_acpype_from_pdb( finp, ff, chargeMethod='bcc', charge=42 ):
     if charge==42: # guess the charge
-        cmd = 'acpype -a {0} -o gmx -i {1} -c {2}'.format(ff,finp,chargeMethod)
+        cmd = 'acpype -a {0} -o gmx -i {1} -c {2} -s 86400'.format(ff,finp,chargeMethod)
     else:
-        cmd = 'acpype -a {0} -o gmx -i {1} -c {2} -n {3}'.format(ff,finp,chargeMethod,charge)
+        cmd = 'acpype -a {0} -o gmx -i {1} -c {2} -n {3} -s 86400'.format(ff,finp,chargeMethod,charge)
     os.system(cmd)
 
 def run_acpype( fname_prmtop, fname_inpcrd, charge, randnum, ff ):
     fname_top = 'MOL_GMX.top'
     fname_gro = 'MOL_GMX.gro'
-    cmd = 'acpype -p '+fname_prmtop+' -x '+fname_inpcrd+' -o gmx -a '+ff+' -n '+str(charge)+' -c user -b MOL'
+    cmd = 'acpype -p '+fname_prmtop+' -x '+fname_inpcrd+' -o gmx -a '+ff+' -n '+str(charge)+' -c user -b MOL -s 86400'
     os.system(cmd)
     return(fname_top,fname_gro)
 
@@ -827,6 +971,7 @@ def main(argv):
 	   FileOption("-itp", "r/o",["itp"],"MOL.itp",""),
 	   FileOption("-ffitp", "r/o",["itp"],"ffMOL.itp",""),
 	   FileOption("-pdb", "r/o",["pdb"],"mol.pdb",""),
+	   FileOption("-sdf", "r/o",["sdf"],"mol.sdf",""),
 	   FileOption("-xyz", "r/o",["xyz"],"orca.xyz",""),
 	   FileOption("-log", "r/o",["log"],"gaussian.log",""),
 	   FileOption("-esp", "r/o",["esp"],"esp.esp",""),
@@ -838,11 +983,14 @@ def main(argv):
 	# define options
     options=[
            Option( "-ff", "string", "opls", "force-field: opls, cgenff, gaff"),
+           Option( "-chargeMethod", "string", "nagl", "for openff, can define am1bcc or nagl"),
            Option( "-rule", "string", "default", "ibrahim, jorgensen, gutierrez"),
            Option( "-ligname", "string", "", "set ligand name (if none given, will not change the name)"),
            Option( "-q", "int", 0, "charge of the molecule"),
+           Option( "-ecc", "float", 0.75, "scaling for ecc correction (only charged molecules get scaled)"),
            Option( "-scaleD", "float", 1.0, "additionally can scale halogen-sigmahole distance which is set by a rule (may be needed for stability)"),
            Option( "-sh", "bool", True, "if set to False, no sigmahole will be generated"),
+           Option( "-massRE", "bool", False, "if set to True, do mass repartitioning (x3 for H)"),
            Option( "-clean", "bool", False, "clean working files"),
             ]
 
@@ -876,6 +1024,8 @@ def main(argv):
 
     cmdl = Commandline( argv, options = options,fileoptions = files,program_desc = help_text, check_for_existing_files = False )
 
+    bClean = cmdl['-clean']
+    eccScale = float(cmdl["-ecc"])
     ff = cmdl['-ff'].lower()
     if 'opls' in ff:
         ff = 'oplsaa'
@@ -885,6 +1035,23 @@ def main(argv):
         ff = 'gaff2'
     elif ('gaff' in ff) or ('amber' in ff):
         ff = 'gaff'
+    if 'openff' in ff:
+        from pmx import forcefield as pmxff
+        from openff.toolkit.utils import toolkits
+        ### OpenEye version: uncomment the following if you have and if you want to use the OpenEye toolkit, then RDKit and Ambertools toolkits
+        #toolkit_precedence = [toolkits.OpenEyeToolkitWrapper, toolkits.RDKitToolkitWrapper, toolkits.AmberToolsToolkitWrapper]
+        ### Non-OpenEye version: uncomment the following if you want to use the rdkit and ambertools
+        toolkit_precedence = [toolkits.RDKitToolkitWrapper, toolkits.AmberToolsToolkitWrapper]
+        toolkits.GLOBAL_TOOLKIT_REGISTRY = toolkits.ToolkitRegistry(toolkit_precedence=toolkit_precedence)
+        from openff.toolkit.topology import Molecule, Topology
+
+        if ff not in ['openff-1.0.0','openff-1.0.1','openff-1.1.0','openff-1.1.1','openff-1.2.0','openff-1.2.1','openff-1.3.0','openff-1.3.1','openff-2.0.0','openff-2.2.1']:
+            print(f"Force field {ff} is not available")
+            sys.exit(0)
+
+        if 'xml' not in ff:
+            ff = f"{ff}.offxml"#openff-2.0.0.offxml
+    chargeMethod = cmdl['-chargeMethod']
 
     bSH = cmdl['-sh']
 
@@ -892,6 +1059,11 @@ def main(argv):
     bFFITPinp = cmdl.opt['-ffitp'].is_set
     itpfname = cmdl['-itp']
     ffitpfname = cmdl['-ffitp']
+    charge = cmdl['-q']
+    if cmdl.opt['-pdb'].is_set and cmdl.opt['-q'].is_set==False:
+        charge = charge_from_pdb( cmdl['-pdb'] )
+    if cmdl.opt['-sdf'].is_set and cmdl.opt['-q'].is_set==False:
+        charge = charge_from_sdf( cmdl['-sdf'] )
 
     ##########################
     ### identify the rules ###
@@ -902,6 +1074,8 @@ def main(argv):
         elif ('charmm' in ff) or ('cgenff' in ff):
             rule = 'gutierrez'
         elif 'gaff' in ff:
+            rule = 'ibrahim'
+        elif 'openff' in ff:
             rule = 'ibrahim'
     elif rule.startswith('jorgensen'):
         rule = 'jorgensen'
@@ -915,7 +1089,7 @@ def main(argv):
     ########################### 
 
     if cmdl.opt['-log'].is_set==False and cmdl.opt['-esp'].is_set==False:
-        if cmdl.opt['-pdb'].is_set==False:
+        if cmdl.opt['-pdb'].is_set==False and (cmdl.opt['-sdf'].is_set==False and 'openff' not in ff):
             print('Need to provide Gaussian output or ESP file or PDB structure file')
             sys.exit(0)
         if cmdl.opt['-esp'].is_set==True and cmdl.opt['-xyz'].is_set==False and cmdl.opt['-pdb'].is_set==False:
@@ -925,20 +1099,25 @@ def main(argv):
         print('Need to provide XYZ or PDB when using ESP file')
         sys.exit(0)
 
-    if cmdl.opt['-pdb'].is_set:
+    if (cmdl.opt['-pdb'].is_set or cmdl.opt['-sdf'].is_set) and ('openff' not in ff):
         # just read pdb
         if bITPinp or cmdl.opt['-log'].is_set or cmdl.opt['-esp'].is_set:
             m = Model().read(cmdl['-pdb'])
         # need to generate pdb first, then read it (only works for gaff now)
         elif( 'gaff' in ff):
-            if cmdl.opt['-q'].is_set:
-                run_acpype_from_pdb( cmdl['-pdb'],ff,charge=cmdl['-q'] )
-            else:
-                run_acpype_from_pdb( cmdl['-pdb'],ff )
-            m = Model().read(cmdl['-pdb'])
-            pdbname = cmdl['-pdb'].split('/')[-1].split('.')[-2]
-            acpypepath = ''.join( cmdl['-pdb'].split('.')[0:-1] )+'.acpype'
-            itpfname = '{0}/{1}_GMX.itp'.format(acpypepath,pdbname)
+            if cmdl.opt['-pdb'].is_set:
+                run_acpype_from_pdb( cmdl['-pdb'],ff,charge=charge )
+                m = Model().read(cmdl['-pdb'])
+                ligFname = cmdl['-pdb'].split('/')[-1].split('.')[-2]
+            elif cmdl.opt['-sdf'].is_set:
+                run_acpype_from_pdb( cmdl['-sdf'],ff,charge=charge )
+                ligand = Chem.SDMolSupplier(cmdl['-sdf'], removeHs=False)[0]
+                ligFname = cmdl['-sdf'].split('/')[-1].split('.')[-2]
+                Chem.MolToPDBFile(ligand,cmdl['-opdb'])
+                m = Model().read(cmdl['-opdb'])
+#            acpypepath = ''.join( cmdl['-pdb'].split('.')[0:-1] )+'.acpype'
+            acpypepath = f"{ligFname}.acpype"
+            itpfname = '{0}/{1}_GMX.itp'.format(acpypepath,ligFname)
             ffitpfname = cmdl['-offitp']
             split_itp_ffitp( itpfname, ffitpfname, cmdl['-oitp'] )
             bITPinp = True
@@ -949,9 +1128,58 @@ def main(argv):
             sys.exit(0)
 #    sys.exit(0)
 
+    # openff
+    if 'openff' in ff:
+        ligFname = ''
+        if cmdl.opt['-sdf'].is_set:
+            ligand = Molecule.from_file(cmdl['-sdf'], allow_undefined_stereo=True)
+            ligFname = cmdl['-sdf'].split('/')[-1].split('.')[-2]
+        elif cmdl.opt['-pdb'].is_set:
+            ligFname = cmdl['-pdb'].split('/')[-1].split('.')[-2]
+            # Try to read in PDB file instead of a SDF, only works with OpenEye
+            print('WARNING: SDF file not available. Trying to read in PDB file and automatically convert it to SDF. ' 'This might lead to wrong bond orders.')
+            ligand = Molecule.from_file(cmdl['-pdb'], allow_undefined_stereo=True)
+#            ligand = Chem.MolFromPDBFile(cmdl['-pdb'],removeHs=False) 
+        else:
+            warnings.warn(f'File not found. Ligand cannot be read in. Continuing with next ligand.')
+            sys.exit(0)
+
+        try:
+            pmd_structure, ligand_topology, ligand_system, ligand_positions = ligandToPMDopenff(ligand,ff,chargeMethod)
+        except Exception as e:
+            print('      ' + str(e))
+
+        # Export GROMACS files.
+        randnum = random.randrange(1000,9999) # needed for temporary files
+        fname_top = 'ligtop_'+str(randnum)+'.top'
+        pmd_structure.save(f'{fname_top}', overwrite=True)
+
+        # Create GROMACS ITP file
+        itp = TopolBase(f'{fname_top}')
+        itp.set_mol_name('MOL')
+        change_atomtypes(itp, ligFname)
+        set_charge_to_zero(itp)
+
+        write_ff( itp.atomtypes, cmdl['-offitp'] )
+        itp.atomtypes = []
+        itp.is_itp = True
+        pmd_structure.save(cmdl['-opdb'], overwrite=True)
+        m = Model().read(cmdl['-opdb'])
+#        itp.write(f'{pwf.ligPath}/{lig}/top/{pwf.forcefield}/{lig}.itp')
+#        write_posre(itp, f'{pwf.ligPath}/{lig}/top/{pwf.forcefield}/posre_{lig}.itp')
+        ffitpfname = cmdl['-offitp']
+        bFFITPinp = True
+
+        # Export AMBER files.
+#        pmd_structure.save(f'{pwf.ligPath}/{lig}/top/{pwf.forcefield}/{lig}.prmtop', overwrite=True)
+#        pmd_structure.save(f'{pwf.ligPath}/{lig}/top/{pwf.forcefield}/{lig}.inpcrd', overwrite=True)
+
+        if bClean==True:
+            cmd = f"rm {fname_top}"
+            os.system(cmd)
+
+
     scaleD = cmdl['-scaleD']
-    bClean = cmdl['-clean']
-    charge = cmdl['-q']
 
     bRESP = False
     if bITPinp:
@@ -967,7 +1195,7 @@ def main(argv):
     else:
         ffitp = TopolBase( filename=None )#ff=ff )
 
-    if bITPinp:
+    if bITPinp or ('openff' in ff):
         halogens = []
         halogens_nn = []
         if bSH==True:
@@ -1039,9 +1267,9 @@ def main(argv):
         itp.atomtypes = []
         # clean
         if bClean==True:
-            cmd = "rm "+fname_pdb+" "+fname_ac+" "+fname_esp+" "+fname_resp+" "+fname_ac_resp+" "+fname_frcmod+" "+fname_mol2+" "+fname_prmtop+" "+fname_inpcrd+" "+fname_top+" ANTECHAMBER* ATOMTYPE* leap.in leap.log"
+            cmd = "rm "+fname_pdb+" "+fname_ac+" "+fname_esp+" "+fname_resp+" "+fname_ac_resp+" "+fname_frcmod+" "+fname_mol2+" "+fname_prmtop+" "+fname_inpcrd+" "+fname_top+" "+fname_sdf+" ANTECHAMBER* ATOMTYPE* leap.in leap.log"
             os.system(cmd)
-    else:
+    elif 'openff' not in ff:
         print('Need to provide -itp or -log')
         sys.exit(0)
 #        print halogens[0].name
@@ -1051,7 +1279,16 @@ def main(argv):
     if len(cmdl['-ligname'])>0:
         set_ligname( cmdl['-ligname'], m, itp )
 
-    m.write(cmdl['-opdb'])
+    if cmdl['-massRE']==True:
+        itp.repartition_mass( ) 
+
+    m.write(cmdl['-opdb'], bRDKitCompatible=True)
     itp.write( cmdl['-oitp'], stateBonded='A' )
+
+    # ecc scaling and output
+    ecc_scaling( itp, eccScale )
+    eccfname =  re.sub( r'.itp', '', cmdl['-oitp'] )
+    eccfname = f"{eccfname}_ECC.itp"
+    itp.write( eccfname, stateBonded='A' )
 
 main( sys.argv )
