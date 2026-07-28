@@ -2767,8 +2767,47 @@ class LigandHybridTopology:
 #####################################
         # first molecule pairs14
         for p in self.itp1.pairs:
-            self.newpairs.append( p )
-            pp.append( (p[0].id,p[1].id) )
+            id1 = p[0].id
+            id2 = p[1].id
+            a1 = self.m1.atoms[id1-1]
+            a2 = self.m1.atoms[id2-1]
+            entrA = self._get_ff_entry([a1.id, a2.id], self.itp1, what= 'pairs')
+            bOk = False
+            # stateA non dummies, stateB non dummies
+            if hasattr(a1,"idB") and hasattr(a2,"idB"):
+                idB1 = a1.idB
+                idB2 = a2.idB
+                entr = self._get_ff_entry([idB1, idB2], self.itp2, what= 'pairs')
+                if ((entrA is None) and (entr is not None)) or ((entrA is not None) and (entr is None)):
+                    bOk = False
+                elif entr is not None:
+                    self.newpairs.append([p[0],p[1],p[2],[p[2]]+p[3],[p[2]]+entr])
+                    bOk = True
+                else:
+                    self.newpairs.append([p[0],p[1],p[2],[]])
+                    bOk = True
+            # stateB dummies
+            elif a1.atomtypeB[:3] == 'DUM' or a2.atomtypeB[:3] == 'DUM':
+                entr = self._get_ff_entry([a1.id, a2.id], self.itp1, what= 'pairs')
+                if entr is not None:
+                    self.newpairs.append ([p[0],p[1],p[2],[p[2]]+p[3],[p[2]]+entr])
+                    bOk = True
+                else:
+                    self.newpairs.append([p[0],p[1],p[2],[]])
+                    bOk = True
+            else:
+                self.newpairs.append(p)
+                bOk = True
+
+            if not bOk:
+                doLog(self.logfile, "Error: Something went wrong while assigning pairs!")
+                doLog(self.logfile, "A-> Atom1: %d-%s Atom2: %d-%s" %(a1.id, a1.name, a2.id, a2.name))
+                doLog(self.logfile, "B-> Atom1: %d-%s Atom2: %d-%s" %(a1.idB, a1.nameB, a2.idB, a2.nameB))
+                doLog(self.logfile,"Exiting....")
+                sys.exit(1)
+
+#            self.newpairs.append( p )
+#            pp.append( (p[0].id,p[1].id) )
 
 #####################################
         # second molecule pairs14
@@ -2777,9 +2816,15 @@ class LigandHybridTopology:
             newid2 = self.id_dicBA[p[1].id]
             a1 = self.m1.atoms[newid1-1]
             a2 = self.m1.atoms[newid2-1]
-            if (newid1, newid2) not in pp and \
-               (newid2, newid1) not in pp:
-                self.newpairs.append([ a1, a2, 1] )
+            if a1.atomtype.startswith('DUM') or \
+               a2.atomtype.startswith('DUM'):
+                if len(p)==3: # gaff style pairs, i.e. no explicit params
+                    self.newpairs.append( [a1, a2, 1] )
+                else: # openff style pairs, i.e. explicit params
+                    self.newpairs.append( [a1, a2, 1, [1]+p[-1], [1]+p[-1]] )
+#            if (newid1, newid2) not in pp and \
+#               (newid2, newid1) not in pp:
+#                self.newpairs.append([ a1, a2, 1] )
 
     def _assemble_itp( self ):
         self.newitp = TopolBase(filename=None)
@@ -2869,6 +2914,15 @@ class LigandHybridTopology:
                    (b[1].id == ids[0] and b[0].id == ids[1]):
                     out = cp.deepcopy(b)
                     return(out[3:][0])
+        elif what == 'pairs':
+            for b in itp.pairs:
+                if (b[0].id == ids[0] and b[1].id == ids[1]) or \
+                   (b[1].id == ids[0] and b[0].id == ids[1]):
+                    out = cp.deepcopy(b)
+                    try:
+                        return(out[3:][0])
+                    except:
+                        return( None )
         elif what == 'angle':
             for b in itp.angles:
                 if (b[0].id == ids[0] and b[1].id == ids[1] and b[2].id == ids[2]) or \

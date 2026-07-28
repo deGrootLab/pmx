@@ -370,13 +370,38 @@ class TopolBase:
                 self.bonds.append([self.atoms[idx[0]-1], self.atoms[idx[1]-1],
                                    idx[2], [idx[2], lA, kA], [idx[2], lB, kB]])
 
+#    def read_pairs(self, lines):
+#        lst = readSection(lines, '[ pairs ]', '[')
+#        self.pairs = []
+#        for line in lst:
+#            idx = [int(x) for x in line.split()]
+#            self.pairs.append([self.atoms[idx[0]-1], self.atoms[idx[1]-1],
+#                               idx[2]])
+
     def read_pairs(self, lines):
         lst = readSection(lines, '[ pairs ]', '[')
         self.pairs = []
         for line in lst:
-            idx = [int(x) for x in line.split()]
-            self.pairs.append([self.atoms[idx[0]-1], self.atoms[idx[1]-1],
-                               idx[2]])
+            entries = line.split()
+            if len(entries) == 3:
+                idx = [int(x) for x in line.split()]
+                self.pairs.append([self.atoms[idx[0]-1], self.atoms[idx[1]-1],
+                                   idx[2]])
+            elif len(entries) == 5:
+                idx = [int(x) for x in entries[:3]]
+                l = float(entries[3])
+                k = float(entries[4])
+                self.pairs.append([self.atoms[idx[0]-1], self.atoms[idx[1]-1],
+                                   idx[2], [l, k]])
+
+            elif len(entries) == 7:
+                idx = [int(x) for x in entries[:3]]
+                lA = float(entries[3])
+                kA = float(entries[4])
+                lB = float(entries[5])
+                kB = float(entries[6])
+                self.pairs.append([self.atoms[idx[0]-1], self.atoms[idx[1]-1],
+                                   idx[2], [idx[2], lA, kA], [idx[2], lB, kB]])
 
     def read_constraints(self, lines):
         lst = readSection(lines, '[ constraints ]', '[')
@@ -1244,12 +1269,37 @@ class TopolBase:
                     print('%6d %6d %6d %14.6f %14.6f %14.6f %14.6f' %
                           (b[0].id, b[1].id, b[2], lB, kB, lB, kB), file=fp)
 
-    def write_pairs(self, fp):
+#    def write_pairs(self, fp):
         # CHECK HOW THIS GOES WITH B-STATES
+#        print('\n[ pairs ]', file=fp)
+#        print(';  ai    aj funct            c0            c1            c2            c3', file=fp)
+#        for p in self.pairs:
+#            print('%6d %6d %6d' % (p[0].id, p[1].id, p[2]), file=fp)
+
+    def write_pairs(self, fp, state='AB'):
+
         print('\n[ pairs ]', file=fp)
         print(';  ai    aj funct            c0            c1            c2            c3', file=fp)
         for p in self.pairs:
-            print('%6d %6d %6d' % (p[0].id, p[1].id, p[2]), file=fp)
+            if len(p) == 3:
+                print('%6d %6d %6d' % (p[0].id, p[1].id, p[2]), file=fp)
+            elif len(p) == 4:
+                s = '   '+'   '.join([str(x) for x in p[3]])
+                print('%6d %6d %6d %s' % (p[0].id, p[1].id, p[2], s), file=fp)
+            else:
+                lA = p[3][1]
+                kA = p[3][2]
+                lB = p[4][1]
+                kB = p[4][2]
+                if state == 'AB':
+                    print('%6d %6d %6d %14.6f %14.6f %14.6f %14.6f' %
+                          (p[0].id, p[1].id, p[2], lA, kA, lB, kB), file=fp)
+                elif state == 'AA':
+                    print('%6d %6d %6d %14.6f %14.6f %14.6f %14.6f' %
+                          (p[0].id, p[1].id, p[2], lA, kA, lA, kA), file=fp)
+                elif state == 'BB':
+                    print('%6d %6d %6d %14.6f %14.6f %14.6f %14.6f' %
+                          (p[0].id, p[1].id, p[2], lB, kB, lB, kB), file=fp)
 
     def write_constraints(self, fp):
         # CHECK HOW THIS GOES WITH B-STATES
