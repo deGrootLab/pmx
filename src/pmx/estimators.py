@@ -869,7 +869,7 @@ class BAR:
         x0 = (avA+avB)/2.
         dg = fmin(func, x0=x0, args=(wf, wr), disp=0)
 
-        return float(dg)
+        return float(dg.item())
 
     @staticmethod
     def calc_err(dg, wf, wr, T):
