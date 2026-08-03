@@ -92,12 +92,12 @@ def writeFormatPDB(fname,m,title="",nr=1,bStrict=False):
     for atom in m.atoms:
         foo = cp.deepcopy(atom)
         # chlorine
-        if( 'CL' in atom.name or 'Cl' in atom.name or 'cl' in atom.name ):
-            foo.name = "CL"#+"  "
+        if atom.name.upper().startswith("CL"):
+            foo.name = ("Cl" + atom.name[2:])[:atNameLen]
             print(foo,file=fp)
         # bromine
-        elif( 'BR' in atom.name or 'Br' in atom.name or 'br' in atom.name ):
-            foo.name = "BR"#+"  "
+        elif atom.name.upper().startswith("BR"):
+            foo.name = ("Br" + atom.name[2:])[:atNameLen]
             print(foo,file=fp)
         elif( len(atom.name) > atNameLen): # too long atom name
             foo = cp.deepcopy(atom)
