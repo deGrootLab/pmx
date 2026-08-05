@@ -362,8 +362,10 @@ class Model(Atomselection):
                 r.chain = ch
                 r.chain_id = ch.id
 
-    def __readPDB(self, fname=None, pdbline=None):
+    def __readPDB(self, fname=None, pdbline=None, bCONECT=False):
         """Reads a PDB file"""
+        if bCONECT:
+            self._pdb_conect = []
         if pdbline:
             lines = pdbline.split('\n')
         else:
@@ -374,6 +376,8 @@ class Model(Atomselection):
                 self.atoms.append(a)
             if line[:6] == 'CRYST1':
                 self.box = _p.box_from_cryst1(line)
+            if bCONECT and line[:6] == "CONECT":
+                self._pdb_conect.append(line.strip())
         self.make_chains()
         self.make_residues()
         self.unity = 'A'
@@ -385,14 +389,14 @@ class Model(Atomselection):
         if atN.name != 'N':
             return(False)
         d = atC - atN
-        if d > 1.7: # bond 
+        if d > 1.7: # bond
             return(True)
         return(False)
 
-    def __compareWithoutLastChar(self, str1, str2): 
+    def __compareWithoutLastChar(self, str1, str2):
         if isinstance(str1,int) and isinstance(str2,int): # e.g. 52, 53
             return(False)
- 
+
         if isinstance(str1,int): # e.g. 52, 52A
             if str1==int(str2[0:-1]): # 52, 52A
                 return(True)
@@ -419,7 +423,7 @@ class Model(Atomselection):
                 if( a.chain_id not in usedChainIDs ):
                     usedChainIDs.append( a.chain_id )
         return( usedChainIDs )
-        
+
     # TODO: make readPDB and readPDBTER a single function. It seems like
     # readPDBTER is more general PDB reader?
     def __readPDBTER(self, fname=None, pdbline=None, bNoNewID=True, bPDBGAP=False, bPDBMASS=False):
@@ -467,7 +471,7 @@ class Model(Atomselection):
                             bNewChain = True
                         if (prevAtomName == 'HH33') and ((prevResName=='NME') or (prevResName=='NAC') or (prevResName=='CT3')): # NME cap
                             bNewChain = True
-                        # do not assign new chain IDs for waters, ions 
+                        # do not assign new chain IDs for waters, ions
                         if (a.resname=='WAT') or (a.resname=='SOL') or (a.resname=='TIP3') or (a.resname=='HOH') \
                            or (a.resname=='NA') or (a.resname=='CL') \
                            or (a.resname=='NaJ') or (a.resname=='Na') or (a.resname=='Cl') or (a.resname=='K') or (a.resname=='KJ') \
@@ -632,7 +636,7 @@ class Model(Atomselection):
         else:
             self.moltype = 'unknown'
 
-    def read(self, filename, bPDBTER=False, bNoNewID=True, bPDBGAP=False, bPDBMASS=False):
+    def read(self, filename, bPDBTER=False, bNoNewID=True, bPDBGAP=False, bPDBMASS=False, bCONECT=False):
         """PDB/GRO file reader.
 
         Parameters
@@ -647,6 +651,8 @@ class Model(Atomselection):
             True. Default is True.
         bPDBGAP : bool
             whether search for gaps in the chain to assign new chain IDs.
+        bCONECT : bool
+            whether to read CONECT entries from PDB
         """
         ext = filename.split('.')[-1]
         if ext == 'pdb':
@@ -655,7 +661,7 @@ class Model(Atomselection):
                                          pdbline=None,
                                          bNoNewID=bNoNewID, bPDBGAP=bPDBGAP, bPDBMASS=bPDBMASS)
             else:
-                return self.__readPDB(fname=filename)
+                return self.__readPDB(fname=filename, bCONECT=bCONECT)
         elif ext == 'gro':
             return self.__readGRO(filename)
         else:
@@ -808,7 +814,7 @@ class Model(Atomselection):
             else:
                 valid_resids.append(r.id)
 
-        if chain is not None:        
+        if chain is not None:
             valid_chresids = []
             for r in self.chdic[chain].residues:
                 if isinstance(r.id,str):
@@ -854,7 +860,7 @@ class Model(Atomselection):
                 else:
                     if r.id.replace(" ","")==idx:
                         return r
-            
+
 
     def fetch_residues(self, key, inv=False):
         """Gets residues using a list of residue names.
@@ -989,7 +995,7 @@ def assign_masses_to_model(model, topology=None):
     topology : Topology
         Topology object of the same molecule. When no topology provided, standard library masses are used.
     '''
-    
+
     if topology!=None:
         for ma, ta in zip(model.atoms, topology.atoms):
             if ma.name != ta.name:

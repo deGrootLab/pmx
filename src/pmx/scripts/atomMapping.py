@@ -182,9 +182,13 @@ Provided two structures find atoms to be morphed.
                         type=int,
                         help='Maximum time (s) for an MCS search (default 10 s).',
                         default=10)
+    parser.add_argument("--conect",
+                        dest="conect",
+                        help="Read CONECT entries from pdb files (default False)",
+                        action="store_true")
 
     parser.set_defaults(alignment=True,mcs=True,H2H=True,H2Hpolar=False,H2Heavy=False,
-                        RingsOnly=False,dMCS=False,swap=False,chirality=True)
+                        RingsOnly=False,dMCS=False,swap=False,chirality=True, conect=False)
     args, unknown = parser.parse_known_args()
     check_unknown_cmd(unknown)
 
@@ -219,14 +223,15 @@ def main(args):
     bRingsOnly = args.RingsOnly
     d = args.d
     timeout = args.timeout
-    bdMCS = args.dMCS 
+    bdMCS = args.dMCS
+    bCONECT = args.conect
 
 #####################################
     # log file
     logfile = open(args.log,'w')
 
 #####################################
-   # identify the methods to use 
+   # identify the methods to use
     bAlignment = args.alignment
     bMCS = args.mcs
     if bMCS==False and bAlignment==False:
@@ -256,10 +261,10 @@ def main(args):
         doLog(logfile,'Input pdb2 not found. Exiting...',commandName='atomMapping')
         sys.exit(0)
     pid = os.getpid()
-    pdbName1,atomNameID1,sigmaHoleID1 = reformatPDB(args.i1,1,pid)
-    pdbName2,atomNameID2,sigmaHoleID2 = reformatPDB(args.i2,2,pid)
-    mol1 = Chem.MolFromPDBFile(pdbName1,removeHs=False,sanitize=False)
-    mol2 = Chem.MolFromPDBFile(pdbName2,removeHs=False,sanitize=False)
+    pdbName1,atomNameID1,sigmaHoleID1 = reformatPDB(args.i1,1,pid,bCONECT=bCONECT)
+    pdbName2,atomNameID2,sigmaHoleID2 = reformatPDB(args.i2,2,pid,bCONECT=bCONECT)
+    mol1 = Chem.MolFromPDBFile(pdbName1,removeHs=False,sanitize=False,proximityBonding=(not bCONECT))
+    mol2 = Chem.MolFromPDBFile(pdbName2,removeHs=False,sanitize=False,proximityBonding=(not bCONECT))
     try:
         Chem.SanitizeMol(mol1)
     except:
@@ -293,7 +298,7 @@ def main(args):
             bRingsOnly=True
         else:
             doLog(logfile,"-RingsOnly flag is unset, because one (or both) molecule has no rings",commandName='atomMapping')
-    
+
     n1 = []
     n2 = []
 
@@ -358,7 +363,7 @@ def main(args):
                 ligMap.bCarbonize = False
                 ligMap.bRingsOnly = True
                 n1C,n2C = ligMap.mcs()
-                n1mcs,n2mcs = ligMap._compare_mappings_by_size( mol1,mol2, n1mcs, n2mcs, n1C, n2C ) 
+                n1mcs,n2mcs = ligMap._compare_mappings_by_size( mol1,mol2, n1mcs, n2mcs, n1C, n2C )
 
         doLog(logfile,"MCS: using variant with the mapping size of {0}".format(len(n1mcs)),commandName='atomMapping')
 
@@ -423,7 +428,7 @@ def main(args):
     # swap TODO
 
 
-       
+
 #########################
     # check
     if( len(n1) != len(n2) ):
@@ -481,4 +486,3 @@ def main(args):
 
 if __name__ == '__main__':
     entry_point()
-
