@@ -661,6 +661,8 @@ p=prec, u=units), quiet=quiet)
     # plot work distributions
     # -----------------------
     if args.wplot.lower() != 'none':
+        res_ab = [i * unit_fact for i in res_ab]
+        res_ba = [i * unit_fact for i in res_ba]
         if quiet is False:
             print('\n   Plotting histograms......')
         # hierarchy of estimators: BAR > Crooks > Jarz

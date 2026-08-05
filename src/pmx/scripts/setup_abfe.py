@@ -120,7 +120,25 @@ included in the restraints, or let the script choose them automatically.
                         'behaviour, provide a random seed.',
                         default=None,
                         type=int)
-
+    parser.add_argument('--conc',
+                        metavar='float',
+                        dest='conc',
+                        help='Specify salt concentration (mol/liter). '
+                        'Default is no salt added.',
+                        default=0,
+                        type=float)
+    parser.add_argument('--pname',
+                        metavar='pname',
+                        dest='pname',
+                        help='Name of the positive ion. '
+                        'Default is NA.',
+                        default='NA')
+    parser.add_argument('--nname',
+                        metavar='nname',
+                        dest='nname',
+                        help='Name of the negative ion. '
+                        'Default is CL.',
+                        default='CL')
     args, unknown = parser.parse_known_args()
     check_unknown_cmd(unknown)
 
@@ -250,8 +268,9 @@ def main(args):
             # -----------------
             gmx.solvate(cp='doublebox.gro', cs='spc216.gro', p='doublebox.top', o='solvate.gro')
             gmx.write_mdp(mdp='enmin', fout='genion.mdp')
-            gmx.grompp(f='genion.mdp', c='solvate.gro', p='doublebox.top', o='genion.tpr', maxwarn=1)
-            gmx.genion(s='genion.tpr', p='doublebox.top', o='genion.gro', conc=0.15, neutral=True)
+            gmx.grompp(f='genion.mdp', c='solvate.gro', p='doublebox.top', o='genion.tpr', maxwarn=10)
+            gmx.genion(s='genion.tpr', p='doublebox.top', o='genion.gro', conc=args.conc, neutral=True,
+                       other_flags=f'-pname {args.pname} -nname {args.nname}')
 
             # add restraints to topology
             doubletop = Topology('doublebox.top', assign_types=False)
@@ -276,8 +295,9 @@ def main(args):
             gmx.editconf(f='complex.gro', o='editconf.gro', bt='cubic', d=1.2)
             gmx.solvate(cp='editconf.gro', cs='spc216.gro', p='complex.top', o='solvate.gro')
             gmx.write_mdp(mdp='enmin', fout='genion.mdp')
-            gmx.grompp(f='genion.mdp', c='solvate.gro', p='complex.top', o='genion.tpr', maxwarn=1)
-            gmx.genion(s='genion.tpr', p='complex.top', o='genion.gro', conc=0.15, neutral=True)
+            gmx.grompp(f='genion.mdp', c='solvate.gro', p='complex.top', o='genion.tpr', maxwarn=10)
+            gmx.genion(s='genion.tpr', p='complex.top', o='genion.gro', conc=args.conc, neutral=True,
+                       other_flags=f'-pname {args.pname} -nname {args.nname}')
 
             # add restraints to topology
             comtop = Topology('complex.top', assign_types=False)
@@ -314,8 +334,9 @@ def main(args):
             gmx.editconf(f='ligand.gro', o='editconf.gro', bt='cubic', d=1.2)
             gmx.solvate(cp='editconf.gro', cs='spc216.gro', p='ligand.top', o='solvate.gro')
             gmx.write_mdp(mdp='enmin', fout='genion.mdp')
-            gmx.grompp(f='genion.mdp', c='solvate.gro', p='ligand.top', o='genion.tpr', maxwarn=1)
-            gmx.genion(s='genion.tpr', p='ligand.top', o='genion.gro', conc=0.15, neutral=True)
+            gmx.grompp(f='genion.mdp', c='solvate.gro', p='ligand.top', o='genion.tpr', maxwarn=10)
+            gmx.genion(s='genion.tpr', p='ligand.top', o='genion.gro', conc=args.conc, neutral=True,
+                       other_flags=f'-pname {args.pname} -nname {args.nname}')
 
             os.chdir('../')
 

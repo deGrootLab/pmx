@@ -407,7 +407,7 @@ def plot_work_dist(wf=[], wr=[], fname='Wdist.png', nbins=20, dG=None, dGerr=Non
 
     plt.legend(shadow=True, fancybox=True, loc='upper center',
                prop={'size': 12})
-    plt.ylabel(r'W [kJ/mol]', fontsize=20)
+    plt.ylabel(f'W [{units}]', fontsize=20)
     plt.xlabel(r'# Snapshot', fontsize=20)
     plt.grid(lw=2)
     plt.xlim(0, x[-1]+1)
@@ -422,7 +422,7 @@ def plot_work_dist(wf=[], wr=[], fname='Wdist.png', nbins=20, dG=None, dGerr=Non
         plt.hist(wr, bins=nbins, orientation='horizontal', facecolor='blue',
              alpha=.75, density=True)
 
-    x = np.arange(mini, maxi, .5)
+    x = np.arange(mini, maxi, .05)
 
     if 'AB' in statesProvided:
         y1 = gauss_func(Af, mf, devf, x)
