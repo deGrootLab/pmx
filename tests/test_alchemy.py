@@ -3,6 +3,7 @@ from pmx.model import Model
 from pmx.forcefield import Topology
 from pmx.alchemy import mutate, gen_hybrid_top
 from pmx.gmx import set_gmxlib
+from pmx.ligand_alchemy import _merge_FF_files
 from filecmp import cmp
 
 # set GMXLIB variable
@@ -47,3 +48,18 @@ def test_gen_hybrid_top(gf, tmpdir):
     # compare
     cmp(ref_top, out_top)
     cmp(ref_itp, out_itp)
+
+def test_merging_itps(gf, tmpdir):
+    #input files
+    itp1=gf('alchemy/atomtypes/ffmol1.itp')
+    itp2=gf('alchemy/atomtypes/ffmol2.itp')
+    itp3=gf('alchemy/atomtypes/ffmol3.itp')
+    #output file
+    out_itp = str(tmpdir.join("ffmol_out.itp"))
+    # reference output file
+    ref_itp = gf('alchemy/atomtypes/ffmol_ref.itp')
+    #run merge
+    _merge_FF_files(out_itp, [itp1, itp2, itp3])
+    #raise(Exception(out_itp))
+    # compare
+    assert cmp(ref_itp, out_itp), "does not match extected output."

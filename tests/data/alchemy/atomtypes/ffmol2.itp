@@ -1,0 +1,3 @@
+[ atomtypes ]
+      c3      c3      0.00000      0.00000      A      3.39967e-01      4.57730e-01 ; from gaff repeated, now with bond type
+      hc      hc      0.00000      0.00000      A      2.64953e-01      6.56888e-02 ; from gaff with bond type

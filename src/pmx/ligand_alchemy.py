@@ -3029,12 +3029,43 @@ class LigandHybridTopology:
 #**********************************************#
 class _FFatom:
     def __init__(self,list):
+        #logic based on gromacs' toppush implementation: https://github.com/gromacs/gromacs/blob/31146476c633ccd15d1794ef0c4de77db9fda4ee/src/gromacs/gmxpreprocess/toppush.cpp#L340
+        
+        if(len(list[3])==1 and list[3].isalpha()):
+            self.have_bonded_type=False
+            self.have_atomic_number=False
+        elif(len(list[4])==1 and list[4].isalpha()):
+            try:
+                int(list[1]) #if this succeeds, we have an atomic number in field 1
+                self.have_bonded_type=False
+                self.have_atomic_number=True
+            except ValueError: # otherwize, it's a bond type
+                self.have_bonded_type=True
+                self.have_atomic_number=False
+        elif(len(list[5])==1 and list[5].isalpha()):
+            self.have_bonded_type=True
+            self.have_atomic_number=True
+        else:
+            raise(Exception("unsupported [ atomtypes ] format"))
+        
         self.type = list[0]
-        self.sigmaA = list[1]
-        self.epsA = list[2]
-        self.A = list[3]
-        self.sigmaB = list[4]
-        self.epsB = list[5]
+        shift=0
+        if(self.have_bonded_type and self.have_atomic_number):
+            self.bondtype = list[1]
+            self.anum = list[2]
+            shift=2
+        elif(self.have_bonded_type ):
+            self.bondtype = list[1]
+            shift=1
+        elif(self.have_atomic_number ):
+            self.anum = list[1]
+            shift=1
+        self.sigmaA = list[1+shift] # this should be mass
+        self.epsA = list[2+shift]   # this should be charge
+        self.A = list[3+shift]
+        self.sigmaB = list[4+shift]
+        self.epsB = list[5+shift]
+
 
 class _FFfile:
     def __init__(self, fname=None):
@@ -3049,9 +3080,10 @@ class _FFfile:
         l = open(file).readlines()
         toSkip = "atomtypes"
         for line in l:
-            if toSkip not in line:
-                if line.split():
-                    self.atoms.append(_FFatom(line.split()))
+            stripped_line = line.split(';')[0] #strip comments
+            if toSkip not in stripped_line:
+                if stripped_line.split():
+                    self.atoms.append(_FFatom(stripped_line.split()))
 
 def _get_FF_atoms( ffs ):
     atoms = {}
@@ -3079,5 +3111,5 @@ def _write_FF_file(atoms,file):
 def _merge_FF_files( fnameOut, ffsIn=[] ):
     atoms = _get_FF_atoms( ffsIn )
     _write_FF_file( atoms, fnameOut )
-    
+
 

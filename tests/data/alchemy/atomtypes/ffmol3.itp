@@ -1,0 +1,5 @@
+[ atomtypes ]
+      h1      h1      1      0.00000      0.00000      A      2.47135e-01      6.56888e-02 ; from gaff with bond type and atom number
+      opls_807  C807    12.0110     0.000    A    3.55000E-01   2.92880E-01                ; from opls with bond type
+; cgenff converter to gromacs does not output atomtypes, instead refering to the charmm forcefield for them
+        
