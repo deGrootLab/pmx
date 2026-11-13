@@ -355,7 +355,7 @@ void cryst1_to_box( char *line, matrix box)
   };
 
 
-  sscanf(line,"%*s%s%s%s%lf%lf%lf",sa,sb,sc,&alpha,&beta,&gamma);
+  sscanf(line,"%*s%11s%11s%11s%lf%lf%lf",sa,sb,sc,&alpha,&beta,&gamma);
 
   ePBC_file = -1;
   if (strlen(line) >= 55) {
